@@ -1,11 +1,11 @@
 # Virtual environment
-ActiveSubstanceDetection/Web-Scraping/venv/
+Web-Scraping/venv/
 
 # ChromeDriver
-ActiveSubstanceDetection/Web-Scraping/chromedriver/
+Web-Scraping/chromedriver/
 
 # Etkin Madde klasörü
-ActiveSubstanceDetection/Web-Scraping/etkin-madde/
+Web-Scraping/etkin-madde/
 
 # Laravel projesinde izlenmeyecek dosyalar
 # .env dosyası (açıkça gizli bilgiler içerir)
