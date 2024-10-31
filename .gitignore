@@ -1,0 +1,28 @@
+# Virtual environment
+ActiveSubstanceDetection/Web-Scraping/venv/
+
+# ChromeDriver
+ActiveSubstanceDetection/Web-Scraping/chromedriver/
+
+# Etkin Madde klasörü
+ActiveSubstanceDetection/Web-Scraping/etkin-madde/
+
+# Laravel projesinde izlenmeyecek dosyalar
+# .env dosyası (açıkça gizli bilgiler içerir)
+.env
+
+# Laravel derleme dosyaları ve geçici klasörler
+/public/storage
+/storage/*.key
+/vendor/
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# IDE veya editör ayar dosyaları
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
