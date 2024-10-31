@@ -7,6 +7,9 @@ Web-Scraping/chromedriver/
 # Etkin Madde klasörü
 Web-Scraping/etkin-madde/
 
+Web-Scraping/config.ini
+Web-Scraping/etkin_madde_verileri.csv
+
 # Laravel projesinde izlenmeyecek dosyalar
 # .env dosyası (açıkça gizli bilgiler içerir)
 .env
