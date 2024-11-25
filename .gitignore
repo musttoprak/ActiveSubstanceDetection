@@ -11,6 +11,7 @@ Web-Scraping/config.ini
 Web-Scraping/etkin_madde_verileri.csv
 Web-Scraping/etkin_madde
 Web-Scraping/etkin_madde-eski
+Web-Scraping/ilaclar
 
 # Laravel projesinde izlenmeyecek dosyalar
 # .env dosyası (açıkça gizli bilgiler içerir)
