@@ -6,10 +6,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import TimeoutException
 import time
 import pandas as pd
 import json
 import os
+import re
 
 # Config dosyasını oku
 def read_config():
@@ -44,7 +47,7 @@ def scroll_and_collect_data(driver, scrollable_div_selector):
     last_height = driver.execute_script("return document.body.scrollHeight")
     timeout = 10
     start_time = time.time()
-
+    found = False
     scrollable_div = driver.find_element(By.CSS_SELECTOR, scrollable_div_selector)
 
     while True:
@@ -58,8 +61,17 @@ def scroll_and_collect_data(driver, scrollable_div_selector):
             item_text = item.text
             if item_text not in data:
                 data.append(item_text)
-                item.click()
-                collect_item_data(driver)
+                if item_text.lower().startswith("dor"):
+                    found = True
+                
+                if(found):
+                    try:
+                        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(item))
+                        item.click()
+                        collect_item_data(driver)
+                    except TimeoutException:
+                        print(f"Öğe tıklanabilir durumda değil, atlanıyor: {item_text}")
+                        continue 
 
         # Sayfayı kaydır
         driver.execute_script("arguments[0].scrollTop += 1000;", scrollable_div)
@@ -89,7 +101,6 @@ def collect_item_data(driver):
     therapeutic_content = collect_therapeutic_info(driver, info_div)
 
     save_item_data(file_name, drug_name, general_info_content, therapeutic_content)
-
 
 def collect_general_info(driver, info_div):
     try:
@@ -200,8 +211,7 @@ def collect_therapeutic_info(driver, info_div):
                 break  # Daha fazla sayfa yok
             
             # Buton tıklanabilir olana kadar bekle
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable(next_button))
-
+            WebDriverWait(driver, 1).until(EC.element_to_be_clickable(next_button))
             next_button.click()  # Sonraki sayfaya geç
             time.sleep(0.5)  # Sayfanın yüklenmesi için bekle
         
@@ -209,9 +219,10 @@ def collect_therapeutic_info(driver, info_div):
         print(f"Click error: {e}")
 
     return therapeutic_data
-
     
-
+def sanitize_filename(filename):
+    # Dosya adında geçerli olmayan karakterleri temizliyoruz
+    return re.sub(r'[\/:*?"<>|]', '', filename)    
 
 # Verileri dosyaya kaydet
 def save_item_data(file_name, drug_name, general_info_content, therapeutic_content):
@@ -221,7 +232,7 @@ def save_item_data(file_name, drug_name, general_info_content, therapeutic_conte
         "Genel Bilgi": general_info_content,
         "Müstahzarlar": therapeutic_content
     }
-    
+    file_name = sanitize_filename(file_name)
     # Dosya yolunu oluştur
     base_file_path = os.path.join('etkin_madde', file_name)
     file_path = base_file_path
@@ -238,7 +249,6 @@ def save_item_data(file_name, drug_name, general_info_content, therapeutic_conte
         json.dump(data_to_save, f, ensure_ascii=False, indent=4)  # Daha okunabilir format için indent kullan
     
     print(f"{file_path} dosyası kaydedildi.")
-
 
 def clear_directory(directory):
     # Klasördeki tüm dosyaları sil
@@ -260,7 +270,7 @@ def main():
     driver = start_driver(config['DEFAULT']['webdriver_path'])
     
     try:
-        clear_directory('etkin_madde')
+        #clear_directory('etkin_madde')
         login(driver, config['DEFAULT']['email'], config['DEFAULT']['password'], config['DEFAULT']['url'])
         driver.get(config['DEFAULT']['etkin_madde_url'])
         close_cookie_banner(driver)

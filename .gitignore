@@ -9,6 +9,8 @@ Web-Scraping/etkin-madde/
 
 Web-Scraping/config.ini
 Web-Scraping/etkin_madde_verileri.csv
+Web-Scraping/etkin_madde
+Web-Scraping/etkin_madde-eski
 
 # Laravel projesinde izlenmeyecek dosyalar
 # .env dosyası (açıkça gizli bilgiler içerir)
@@ -29,3 +31,8 @@ yarn.lock
 .vscode/
 .DS_Store
 Thumbs.db
+
+
+Mustafa_Toprak_projesi.pdf
+Mustafa-Toprak_2209A_guncel.docx
+Web-Scraping.zip
