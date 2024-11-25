@@ -49,6 +49,10 @@ def get_tabs_content(driver, link):
 
     tab_data = {}  # Veriyi saklamak için bir dictionary
     
+    product_name_element = driver.find_element(By.CSS_SELECTOR, "#isimHeader span[data-name='urun_adi']")
+    product_name = product_name_element.text  # Ürün adı alınıyor
+    tab_data["Adı"] = product_name
+    
     for tab in tabs:
         # Eğer sekme görünürse, tıklayın
         if "display: none" not in tab.get_attribute("style"):
