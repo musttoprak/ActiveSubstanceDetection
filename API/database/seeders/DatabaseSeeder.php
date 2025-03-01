@@ -13,6 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        // İşlemlerin sırası önemli, ilişkili veriler için sıralamaya dikkat et
+        $this->call([
+            HastalikSeeder::class,        // Önce hastalıkları oluştur
+            HastaSeeder::class,           // Sonra hastaları oluştur
+            HastaTibbiGecmisSeeder::class,// Tıbbi geçmişleri ekle
+            HastaHastalikSeeder::class,   // Hasta-hastalık ilişkileri
+            HastaIlacKullanimSeeder::class, // İlaç kullanım geçmişi
+            LaboratuvarSonucuSeeder::class, // Laboratuvar sonuçları
+        ]);
     }
 }

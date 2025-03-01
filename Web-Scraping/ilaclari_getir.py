@@ -180,13 +180,16 @@ def process_tab_content(driver, tab_name, content_id):
 
 # Tüm sekmeleri işleyip veri toplama
 def get_tabs_content(driver, link):
-    driver.get(link)  # Sayfayı yükle
+    driver.get(link)  # Load the page
     
-    # Tüm sekmeleri bul
+    # Find all tabs
     tabs = driver.find_elements(By.CSS_SELECTOR, "ul[data-toggle='tabs'] li a")
-    tab_data = {}  # Veriyi saklamak için bir dictionary
+    tab_data = {}  # Dictionary to store data
     
-    # Ürün adını al
+    # Initialize tab_name with a default value
+    tab_name = None
+
+    # Retrieve the product name
     try:
         product_name_element = driver.find_element(By.CSS_SELECTOR, "#isimHeader span[data-name='urun_adi']")
         product_name = product_name_element.text.strip()
@@ -195,26 +198,25 @@ def get_tabs_content(driver, link):
         tab_data["Adı"] = "Ürün adı bulunamadı"
         print(f"Ürün adı alınırken hata oluştu: {e}")
 
-    # Her bir sekme için işlem yap
+    # Process each tab
     for tab in tabs:
         try:
             if ("display: none" not in tab.get_attribute("style")) and tab.text.strip() != "":
-                tab_name = tab.text.strip()  # Sekme adını al
+                tab_name = tab.text.strip()  # Get the tab name
                 href_value = tab.get_attribute("href")
-                content_id = href_value.split("#")[1]  # Örneğin "tab_anabilgi" kısmını al
-                
-                # Sekmeye tıkla ve içerik yüklenmesini bekle
+                content_id = href_value.split("#")[1]  # Extract "tab_anabilgi"
+
+                # Click the tab and wait for content to load
                 tab.click()
-                time.sleep(1)  # Dinamik içerik yüklenmesini beklemek için süre
+                time.sleep(1)  # Wait for dynamic content to load
                 
-                # İçeriği işleme fonksiyonuna gönder
+                # Process the content
                 tab_data[tab_name] = process_tab_content(driver, tab_name, content_id)
         except Exception as e:
-            print(f"{tab_name} sekmesi işlenirken hata oluştu: {e}")
-            tab_data[tab_name] = {"Error": str(e)}
+            print(f"{tab_name if tab_name else 'Unknown tab'} sekmesi işlenirken hata oluştu: {e}")
+            tab_data[tab_name if tab_name else 'Unknown tab'] = {"Error": str(e)}
 
     return tab_data
-
 
 def save_to_json(id,data, link):
     # URL'deki &u= parametresini çıkart ve dosya ismini oluştur
@@ -250,13 +252,19 @@ if __name__ == "__main__":
         # Veritabanından linkleri al
         cursor.execute("SELECT id, link FROM preparations")  # `preparations` tablonuzdaki linkleri alıyoruz.
         rows = cursor.fetchall()
+        
+        start_index = 7187  # İlk 65 tanesini atlamak için başlangıç noktasını ayarla (0'dan başlar)
+        current_index = 0  # Mevcut sırayı takip etmek için sayaç
 
         # Her link için işlem yap
         for row in rows:
             id, link = row
-
+            
             if link not in visited_links:
                 visited_links.add(link)  # Linki ziyaret edilenler listesine ekle
+                if current_index < start_index:
+                    current_index += 1
+                    continue 
                 
                 # Sekmeleri al ve verileri al
                 tab_data = get_tabs_content(driver, link)
