@@ -30,7 +30,7 @@ class HastaController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
@@ -96,13 +96,18 @@ class HastaController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Hasta $hasta)
+    public function show($hastaId): \Illuminate\Http\JsonResponse
     {
-        // İlişkili tıbbi geçmiş bilgilerini de getir
+        $hasta = Hasta::findOrFail($hastaId);
         $hasta->load('tibbiGecmis');
+        $hasta->load('hastaHastaliklar');
+        $hasta->load('hastaliklar');
+        $hasta->load('ilacKullanim');
+        $hasta->load('laboratuvarSonuclari');
+        $hasta->load('ilacOnerileri');
 
         return response()->json([
             'status' => 'success',
@@ -114,8 +119,8 @@ class HastaController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Hasta  $hasta
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Hasta $hasta)
@@ -190,7 +195,7 @@ class HastaController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Hasta $hasta)
@@ -206,7 +211,7 @@ class HastaController extends Controller
     /**
      * Search patients by name, surname, tc_kimlik, etc.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function search(Request $request)
@@ -236,7 +241,7 @@ class HastaController extends Controller
     /**
      * Get patient's medical history.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function tibbiGecmis(Hasta $hasta)
@@ -261,7 +266,7 @@ class HastaController extends Controller
     /**
      * Get patient's diseases.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
      */
     public function hastaliklar(Hasta $hasta)
@@ -278,7 +283,7 @@ class HastaController extends Controller
     /**
      * Get patient's drug usage history.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function ilacKullanim(Hasta $hasta)
@@ -295,7 +300,7 @@ class HastaController extends Controller
     /**
      * Get patient's laboratory results.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function laboratuvarSonuclari(Hasta $hasta)
@@ -312,7 +317,7 @@ class HastaController extends Controller
     /**
      * Get drug recommendations for the patient.
      *
-     * @param  \App\Models\Hasta  $hasta
+     * @param \App\Models\Hasta $hasta
      * @return \Illuminate\Http\JsonResponse
      */
     public function ilacOnerileri(Hasta $hasta)

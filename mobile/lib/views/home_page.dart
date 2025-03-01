@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/views/active_ingredient.dart';
 import 'package:mobile/views/drug_detection.dart';
+import 'package:mobile/views/patient/patient_list_page.dart';
 import 'package:mobile/views/settings.dart';
 import '../constants/app_colors.dart';
 
@@ -40,7 +41,7 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "FARMASÖTİK BAKIM ASİSTANI - ETKİN MADDE TESPİTİ",
+                        "FARMASÖTİK BAKIM ASİSTANI - ETKİN MADDE TESPİİTİ",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
@@ -106,9 +107,9 @@ class HomePage extends StatelessWidget {
                   ),
                   _buildShortcutCard(
                     context,
-                    SettingsScreen(backgroundColor: Colors.green),
+                    PatientListPage(),
                     "assets/communication.png",
-                    "İletişim",
+                    "Hastalar",
                     borderColor: Colors.green,
                   ),
                   _buildShortcutCard(
