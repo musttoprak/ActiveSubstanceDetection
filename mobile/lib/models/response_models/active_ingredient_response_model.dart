@@ -1,150 +1,157 @@
-class ActiveIngredientResponseModel {
-  final int id;
-  final String name;
-  final String? image_src;
-  final String? weight;
-  final String? molecular_weight;
-  final String? formula;
-  final String? related_atc_codes;
-  final String? cas;
-  final String? general_info;
-  final String? mechanism;
-  final String? pharmacokinetics;
-  final String? company;
-  final String? barcode;
-  final String? prescription_type;
-  final String? retail_price;
-  final String? depot_price_with_vat;
-  final String? depot_price_without_vat;
-  final String? manufacturer_price_without_vat;
-  final String? vat_info;
-  final String? price_date;
-  final String? active_substance;
-  final String? dosage;
-  final String? sgk_status;
-  final List<Preparation>? preparations;
+import 'dart:convert';
+import 'package:dio/dio.dart';
 
-  ActiveIngredientResponseModel({
-    required this.id,
-    required this.name,
-    this.image_src,
-    this.weight,
-    this.molecular_weight,
-    this.formula,
-    this.related_atc_codes,
-    this.cas,
-    this.general_info,
-    this.mechanism,
-    this.pharmacokinetics,
-    this.company,
-    this.barcode,
-    this.prescription_type,
-    this.retail_price,
-    this.depot_price_with_vat,
-    this.depot_price_without_vat,
-    this.manufacturer_price_without_vat,
-    this.vat_info,
-    this.price_date,
-    this.active_substance,
-    this.dosage,
-    this.sgk_status,
-    this.preparations
+class MustahzarModel {
+  final String? adi;
+  final String? barkod;
+  final String? firma;
+  final String? fiyat;
+  final String? sgkDurumu;
+  final String? etkenMaddeMiktari;
+  final String? receteTipi;
+
+  MustahzarModel({
+    this.adi,
+    this.barkod,
+    this.firma,
+    this.fiyat,
+    this.sgkDurumu,
+    this.etkenMaddeMiktari,
+    this.receteTipi,
   });
 
-  factory ActiveIngredientResponseModel.fromJson(Map<String, dynamic> json) {
-    print(json);
-    return ActiveIngredientResponseModel(
-      id: json['id'],
-      name: json['name'],
-      image_src: json['image_src'],
-      weight: json['weight'],
-      molecular_weight: json['molecular_weight'],
-      formula: json['formula'],
-      related_atc_codes: json['related_atc_codes'],
-      cas: json['cas'],
-      general_info: json['general_info'],
-      mechanism: json['mechanism'],
-      pharmacokinetics: json['pharmacokinetics'],
-      company: json['company'],
-      barcode: json['barcode'],
-      prescription_type: json['prescription_type'],
-      retail_price: json['retail_price'],
-      depot_price_with_vat: json['depot_price_with_vat'],
-      depot_price_without_vat: json['depot_price_without_vat'],
-      manufacturer_price_without_vat: json['manufacturer_price_without_vat'],
-      vat_info: json['vat_info'],
-      price_date: json['price_date'],
-      active_substance: json['active_substance'],
-      dosage: json['dosage'],
-      sgk_status: json['sgk_status'],
-      preparations: (json['preparations'] as List<dynamic>?)
-          ?.map((e) => Preparation.fromJson(e))
-          .toList(),
+  factory MustahzarModel.fromJson(Map<String, dynamic> json) {
+    return MustahzarModel(
+      adi: json['adi'],
+      barkod: json['barkod'],
+      firma: json['firma'],
+      fiyat: json['fiyat'],
+      sgkDurumu: json['sgk_durumu'],
+      etkenMaddeMiktari: json['etken_madde_miktari'],
+      receteTipi: json['recete_tipi'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
-      'image_src': image_src,
-      'weight': weight,
-      'molecular_weight': molecular_weight,
-      'formula': formula,
-      'related_atc_codes': related_atc_codes,
-      'cas': cas,
-      'general_info': general_info,
-      'mechanism': mechanism,
-      'pharmacokinetics': pharmacokinetics,
-      'company': company,
-      'barcode': barcode,
-      'prescription_type': prescription_type,
-      'retail_price': retail_price,
-      'depot_price_with_vat': depot_price_with_vat,
-      'depot_price_without_vat': depot_price_without_vat,
-      'manufacturer_price_without_vat': manufacturer_price_without_vat,
-      'vat_info': vat_info,
-      'price_date': price_date,
-      'active_substance': active_substance,
-      'dosage': dosage,
-      'sgk_status': sgk_status,
-      'preparations': preparations?.map((e) => e.toJson()).toList(),
+      'adi': adi,
+      'barkod': barkod,
+      'firma': firma,
+      'fiyat': fiyat,
+      'sgk_durumu': sgkDurumu,
+      'etken_madde_miktari': etkenMaddeMiktari,
+      'recete_tipi': receteTipi,
     };
   }
 }
 
-class Preparation {
-  final int id;
-  final String name;
-  final String? company;
-  final String? sgk_status;
-  final String? link;
+class EtkenMaddeResponseModel {
+  final int etkenMaddeId;
+  final String etkenMaddeAdi;
+  final String? ingilizceAdi;
+  final String? netKutle;
+  final String? molekulAgirligi;
+  final String? formul;
+  final String? atcKodlari;
+  final String? genelBilgi;
+  final String? etkiMekanizmasi;
+  final String? farmakokinetik;
+  final String? resimUrl;
+  final List<MustahzarModel>? mustahzarlar;
+  final String? etkenMaddeKategorisi;
+  final String? aciklama;
 
-  Preparation({
-    required this.id,
-    required this.name,
-    this.company,
-    this.sgk_status,
-    this.link,
+  EtkenMaddeResponseModel({
+    required this.etkenMaddeId,
+    required this.etkenMaddeAdi,
+    this.ingilizceAdi,
+    this.netKutle,
+    this.molekulAgirligi,
+    this.formul,
+    this.atcKodlari,
+    this.genelBilgi,
+    this.etkiMekanizmasi,
+    this.farmakokinetik,
+    this.resimUrl,
+    this.mustahzarlar,
+    this.etkenMaddeKategorisi,
+    this.aciklama,
   });
 
-  factory Preparation.fromJson(Map<String, dynamic> json) {
-    return Preparation(
-      id: json['id'],
-      name: json['name'],
-      company: json['company'],
-      sgk_status: json['sgk_status'],
-      link: json['link'],
+  factory EtkenMaddeResponseModel.fromJson(Map<String, dynamic> json) {
+    // Mustahzarlar alanını işle
+    List<MustahzarModel>? mustahzarlarList;
+    if (json['mustahzarlar'] != null) {
+      dynamic mustahzarlarData = json['mustahzarlar'];
+      print(mustahzarlarData);
+      // Eğer String olarak geldiyse JSON'a dönüştür
+      if (mustahzarlarData is String) {
+        try {
+          mustahzarlarData = jsonDecode(mustahzarlarData);
+        } catch (e) {
+          print("Mustahzarlar JSON decode hatası: $e");
+          mustahzarlarData = [];
+        }
+      }
+
+      // Liste olarak işle
+      if (mustahzarlarData is List) {
+        mustahzarlarList = mustahzarlarData
+            .map((item) => item is Map<String, dynamic>
+            ? MustahzarModel.fromJson(item)
+            : MustahzarModel())
+            .toList();
+      } else if (mustahzarlarData is Map) {
+        // Eğer map ise ve anahtarları varsa, değerleri liste olarak al
+        mustahzarlarList = mustahzarlarData.values
+            .map((item) => item is Map<String, dynamic>
+            ? MustahzarModel.fromJson(item)
+            : MustahzarModel())
+            .toList();
+      }
+    }
+
+    return EtkenMaddeResponseModel(
+      etkenMaddeId: json['etken_madde_id'] is String
+          ? int.parse(json['etken_madde_id'])
+          : json['etken_madde_id'],
+      etkenMaddeAdi: json['etken_madde_adi'],
+      ingilizceAdi: json['ingilizce_adi'],
+      netKutle: json['net_kutle'],
+      molekulAgirligi: json['molekul_agirligi'],
+      formul: json['formul'],
+      atcKodlari: json['atc_kodlari'],
+      genelBilgi: json['genel_bilgi'],
+      etkiMekanizmasi: json['etki_mekanizmasi'],
+      farmakokinetik: json['farmakokinetik'],
+      resimUrl: json['resim_url'],
+      mustahzarlar: mustahzarlarList,
+      etkenMaddeKategorisi: json['etken_madde_kategorisi'],
+      aciklama: json['aciklama'],
     );
   }
 
   Map<String, dynamic> toJson() {
+    List<Map<String, dynamic>>? mustahzarlarJson;
+    if (mustahzarlar != null) {
+      mustahzarlarJson = mustahzarlar!.map((m) => m.toJson()).toList();
+    }
+
     return {
-      'id': id,
-      'name': name,
-      'company': company,
-      'sgk_status': sgk_status,
-      'link': link,
+      'etken_madde_id': etkenMaddeId,
+      'etken_madde_adi': etkenMaddeAdi,
+      'ingilizce_adi': ingilizceAdi,
+      'net_kutle': netKutle,
+      'molekul_agirligi': molekulAgirligi,
+      'formul': formul,
+      'atc_kodlari': atcKodlari,
+      'genel_bilgi': genelBilgi,
+      'etki_mekanizmasi': etkiMekanizmasi,
+      'farmakokinetik': farmakokinetik,
+      'resim_url': resimUrl,
+      'mustahzarlar': mustahzarlarJson,
+      'etken_madde_kategorisi': etkenMaddeKategorisi,
+      'aciklama': aciklama,
     };
   }
 }

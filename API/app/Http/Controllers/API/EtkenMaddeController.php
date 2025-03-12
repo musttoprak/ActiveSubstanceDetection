@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\EtkenMadde;
+use App\Models\Ilac;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EtkenMaddeController extends Controller
 {
@@ -158,12 +160,24 @@ class EtkenMaddeController extends Controller
      * Get medicines containing this active substance.
      *
      * @param  \App\Models\EtkenMadde  $etkenMadde
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function ilaclar(Request $request, EtkenMadde $etkenMadde)
     {
         $perPage = $request->input('per_page', 15);
-        $ilaclar = $etkenMadde->ilaclar()->paginate($perPage);
+
+        $ilacIds = $etkenMadde->ilaclar()->pluck('ilaclar.ilac_id');
+
+        if ($ilacIds->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'data' => [],
+                'message' => 'Bu etken maddeyle ilgili ilaç bulunamadı'
+            ]);
+        }
+
+        $ilaclar = Ilac::whereIn('ilac_id', $ilacIds)->with('etkenMaddeler')->paginate($perPage);
 
         return response()->json([
             'status' => 'success',
@@ -171,6 +185,8 @@ class EtkenMaddeController extends Controller
             'message' => 'Etken maddeyi içeren ilaçlar başarıyla listelendi'
         ]);
     }
+
+
 
     /**
      * Get related active substances based on ATC codes.

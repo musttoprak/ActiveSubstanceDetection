@@ -1,3 +1,4 @@
+// Gelişmiş Arama Ekranı
 import 'package:flutter/material.dart';
 
 class DrugDetectionScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class DrugDetectionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: backgroundColor,
-        title: const Text("İlaç Tespit"),
+        title: const Text("Gelişmiş İlaç Arama"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -62,7 +63,7 @@ class DrugDetectionScreen extends StatelessWidget {
                     icon: const Icon(Icons.delete, color: Colors.white),
                     label: const Text("Filtreleri Temizle"),
                     style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                    ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                     onPressed: () {},
                   ),
                 ),
@@ -121,8 +122,8 @@ class _ToggleGroup extends StatelessWidget {
 
   const _ToggleGroup(
       {required this.title,
-      required this.options,
-      required this.backgroundColor});
+        required this.options,
+        required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
@@ -136,13 +137,13 @@ class _ToggleGroup extends StatelessWidget {
           children: options
               .map(
                 (option) => OutlinedButton(
-                  child: Text(
-                    option,
-                    style: TextStyle(color: Colors.black),
-                  ),
-                  onPressed: () {},
-                ),
-              )
+              child: Text(
+                option,
+                style: TextStyle(color: Colors.black),
+              ),
+              onPressed: () {},
+            ),
+          )
               .toList(),
         ),
       ],
@@ -157,8 +158,8 @@ class _InputField extends StatelessWidget {
 
   const _InputField(
       {required this.label,
-      required this.hintText,
-      required this.backgroundColor});
+        required this.hintText,
+        required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {

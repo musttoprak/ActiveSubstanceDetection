@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/views/active_ingredient.dart';
+import 'package:mobile/views/active_inredient/active_ingredient.dart';
 import 'package:mobile/views/drug_detection.dart';
+import 'package:mobile/views/medicine/medicine_screen.dart';
 import 'package:mobile/views/patient/patient_list_page.dart';
 import 'package:mobile/views/settings.dart';
 import '../constants/app_colors.dart';
@@ -100,7 +101,7 @@ class HomePage extends StatelessWidget {
                   ),
                   _buildShortcutCard(
                     context,
-                    DrugDetectionScreen(backgroundColor: Colors.red),
+                    MedicineScreen(backgroundColor: Colors.red),
                     "assets/medicine-2.png",
                     "İlaç Tespit",
                     borderColor: Colors.red,

@@ -20,14 +20,20 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        primaryColor: AppColors.primaryWhiteColor,
+        primaryColor: Colors.blue.withOpacity(0.1),
+        // Soft pastel blue
         scaffoldBackgroundColor: Colors.white,
-        canvasColor: const Color(0xFFCADCF8),
+        // Keep background white for clean look
+        canvasColor: const Color(0xFFE7ECF5),
+        // Soft light blue
+        cardColor: Color(0xFFF3F7FC),
+        // Soft pastel light blue for all Cards
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 0,
             foregroundColor: Colors.white,
-            backgroundColor: kPrimaryColor,
+            backgroundColor: Colors.blue.withOpacity(0.1),
+            // Soft muted blue
             shape: const StadiumBorder(),
             maximumSize: const Size(double.infinity, 56),
             minimumSize: const Size(double.infinity, 56),
@@ -35,9 +41,12 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
-          fillColor: kPrimaryLightColor,
-          iconColor: kPrimaryColor,
-          prefixIconColor: kPrimaryColor,
+          fillColor: Color(0xFFF0F5FF),
+          // Light pastel blue
+          iconColor: Color(0xFF6D8EB0),
+          // Muted blue
+          prefixIconColor: Color(0xFF6D8EB0),
+          // Muted blue
           contentPadding: EdgeInsets.symmetric(
               horizontal: defaultPadding, vertical: defaultPadding),
           border: OutlineInputBorder(
@@ -47,17 +56,18 @@ class MyApp extends StatelessWidget {
         ),
         textTheme: const TextTheme(
             displayLarge: TextStyle(
-                color: AppColors.headerTextColor,
+                color: Color(0xFF4B5C6B), // Soft dark gray for headers
                 fontWeight: FontWeight.bold,
                 fontSize: 28),
-            displayMedium:
-                TextStyle(color: AppColors.headerTextColor, fontSize: 24),
+            displayMedium: TextStyle(
+                color: Color(0xFF4B5C6B), // Soft dark gray
+                fontSize: 24),
             displaySmall: TextStyle(
-                color: AppColors.primaryWhiteColor,
+                color: Colors.white, // Keeping header text white for contrast
                 fontSize: 28,
                 fontWeight: FontWeight.bold)),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFCADCF8),
+          backgroundColor: Color(0xFFE7ECF5), // Soft light blue
           elevation: 0,
         ),
       ),

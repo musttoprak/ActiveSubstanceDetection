@@ -27,6 +27,10 @@ yarn-error.log
 package-lock.json
 yarn.lock
 
+#ML kısmı için
+ML/ilac_oneri_model.joblib
+ML/ilac_oneri_model.log
+
 # IDE veya editör ayar dosyaları
 .idea/
 .vscode/

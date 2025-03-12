@@ -26,7 +26,6 @@ class SingInCubit extends Cubit<SingInState> {
           .then((response) async {
         if (!response.error) {
           await SharedPreferences.getInstance().then((prefs) {
-            print(response);
             prefs.setString('id', response.userId.toString());
             prefs.setString('token', response.token.toString());
             prefs.setString('email', email);

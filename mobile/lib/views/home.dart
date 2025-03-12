@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/views/home_page.dart';
+import 'package:mobile/views/pages/barcode_scanner_page.dart';
+import 'package:mobile/views/pages/general_search_page.dart';
 
 import '../constants/app_colors.dart';
 
@@ -24,12 +26,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   final pages = [
     const HomePage(),
-    const Center(
-      child: Text("Genel Arama"),
-    ),
-    const Center(
-      child: Text("Barkod Okut"),
-    )
+    const GeneralSearchPage(),
+    const BarcodeScannerPage()
   ];
 
   @override

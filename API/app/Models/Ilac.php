@@ -34,9 +34,7 @@ class Ilac extends Model
     public function etkenMaddeler()
     {
         return $this->belongsToMany(EtkenMadde::class, 'ilac_etken_maddeler',
-            'ilac_id', 'etken_madde_id')
-            ->withPivot('miktar')
-            ->withTimestamps();
+            'ilac_id', 'etken_madde_id');
     }
 
     public function hastaKullanimlari()

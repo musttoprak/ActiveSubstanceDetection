@@ -169,6 +169,7 @@ class _PatientDetailPageState extends State<PatientDetailPage> with SingleTicker
             itemBuilder: (context, index) {
               final labResult = labResults[index];
               return Card(
+                color: Color(0xFFF3F7FC),
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: ListTile(
                   title: Text(labResult.testTuru),
@@ -333,6 +334,7 @@ class _PatientDetailPageState extends State<PatientDetailPage> with SingleTicker
   // Bilgi kartı widget'ı
   Widget _buildInfoCard(String title, List<InfoItem> items) {
     return Card(
+      color: Color(0xFFF3F7FC),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

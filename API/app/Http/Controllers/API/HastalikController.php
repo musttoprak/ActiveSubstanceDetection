@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hastalik;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -79,11 +80,19 @@ class HastalikController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Hastalik  $hastalik
-     * @return \Illuminate\Http\Response
+     * @param $hastalikId
+     * @return JsonResponse
      */
-    public function show(Hastalik $hastalik)
+    public function show($hastalikId): JsonResponse
     {
+        $hastalik = Hastalik::find($hastalikId);
+        if (!$hastalik) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hastalık bulunamadı'
+            ], 404);
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $hastalik,
@@ -95,7 +104,7 @@ class HastalikController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Hastalik  $hastalik
+     * @param Hastalik $hastalik
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Hastalik $hastalik)
@@ -127,7 +136,7 @@ class HastalikController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Hastalik  $hastalik
+     * @param Hastalik $hastalik
      * @return \Illuminate\Http\Response
      */
     public function destroy(Hastalik $hastalik)
@@ -180,7 +189,7 @@ class HastalikController extends Controller
     /**
      * Get patients who have a specific disease.
      *
-     * @param  \App\Models\Hastalik  $hastalik
+     * @param Hastalik $hastalik
      * @return \Illuminate\Http\Response
      */
     public function hastalar(Request $request, Hastalik $hastalik)

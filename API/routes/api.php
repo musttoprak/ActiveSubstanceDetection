@@ -11,6 +11,7 @@ use App\Http\Controllers\API\IlacEtkenMaddeController;
 use App\Http\Controllers\API\HastaIlacKullanimController;
 use App\Http\Controllers\API\LaboratuvarSonucuController;
 use App\Http\Controllers\API\IlacOnerisiController;
+use App\Http\Controllers\API\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,7 @@ Route::post('/hasta-tibbi-gecmis/hasta/{hasta}/kronik-hastaliklar', [HastaTibbiG
 
 // Hastalık (Disease) Routes
 Route::apiResource('hastaliklar', HastalikController::class);
+Route::get('/hastaliklar/{hastalik_id}', [HastalikController::class, 'show']);
 Route::get('/hastaliklar/search', [HastalikController::class, 'search']);
 Route::get('/hastaliklar/{hastalik}/hastalar', [HastalikController::class, 'hastalar']);
 Route::get('/hastaliklar/kategoriler', [HastalikController::class, 'kategoriler']);
@@ -91,16 +93,17 @@ Route::post('/ilaclar/{ilac}/etken-maddeler/ekle', [IlacEtkenMaddeController::cl
 // Public Routes
 
 // İlaç (Medicine) Routes
-Route::apiResource('ilaclar', IlacController::class)->only(['index', 'show']);
 Route::get('/ilaclar/search', [IlacController::class, 'search']);
+Route::apiResource('ilaclar', IlacController::class);
 Route::get('/ilaclar/{ilac}/etken-maddeler', [IlacController::class, 'etkenMaddeler']);
 Route::get('/ilaclar/{ilac}/fiyat-hareketleri', [IlacController::class, 'fiyatHareketleri']);
 Route::get('/ilaclar/{ilac}/esdeger-ilaclar', [IlacController::class, 'esdegerIlaclar']);
 Route::get('/ilaclar/{ilac}/benzer-ilaclar', [IlacEtkenMaddeController::class, 'findSimilarMedicines']);
 
 // Etken Madde (Active Substance) Routes
-Route::apiResource('etken-maddeler', EtkenMaddeController::class)->only(['index', 'show']);
 Route::get('/etken-maddeler/search', [EtkenMaddeController::class, 'search']);
+Route::get('etken-maddeler/{etkenMadde}', [EtkenMaddeController::class, 'show']);
+Route::apiResource('etken-maddeler', EtkenMaddeController::class);
 Route::get('/etken-maddeler/{etkenMadde}/ilaclar', [EtkenMaddeController::class, 'ilaclar']);
 Route::get('/etken-maddeler/{etkenMadde}/benzer-etken-maddeler', [EtkenMaddeController::class, 'relatedActiveSubstances']);
 
@@ -108,3 +111,6 @@ Route::get('/etken-maddeler/{etkenMadde}/benzer-etken-maddeler', [EtkenMaddeCont
 Route::apiResource('ilac-etken-maddeler', IlacEtkenMaddeController::class)->only(['index', 'show']);
 Route::get('/ilac-etken-maddeler/etken-madde/{etkenMadde}/ilaclar', [IlacEtkenMaddeController::class, 'getMedicinesByActiveSubstance']);
 Route::get('/ilac-etken-maddeler/ilac/{ilac}/etken-maddeler', [IlacEtkenMaddeController::class, 'getActiveSubstancesByMedicine']);
+
+Route::get('/general/search', [SearchController::class, 'search']);
+Route::get('/general/{barcode}', [SearchController::class, 'getMedicineByBarcode']);
