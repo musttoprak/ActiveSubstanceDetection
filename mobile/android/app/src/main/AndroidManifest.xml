@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Kamera izni -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Kamera gereksinimi -->
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+
     <application
         android:label="mobile"
         android:name="${applicationName}"

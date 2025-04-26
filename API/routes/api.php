@@ -11,6 +11,7 @@ use App\Http\Controllers\API\IlacEtkenMaddeController;
 use App\Http\Controllers\API\HastaIlacKullanimController;
 use App\Http\Controllers\API\LaboratuvarSonucuController;
 use App\Http\Controllers\API\IlacOnerisiController;
+use App\Http\Controllers\API\ReceteController;
 use App\Http\Controllers\API\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -85,9 +86,21 @@ Route::get('/ilac-onerileri/hasta/{hasta}', [IlacOnerisiController::class, 'getB
 Route::get('/ilac-onerileri/hastalik/{hastalik}', [IlacOnerisiController::class, 'getByHastalik']);
 Route::post('/ilac-onerileri/generate', [IlacOnerisiController::class, 'generateRecommendations']);
 Route::post('/ilac-onerileri/{ilacOnerisi}/uygula', [IlacOnerisiController::class, 'applyRecommendation']);
+Route::post('/ilac-onerisi', [IlacOnerisiController::class, 'ilacOner']);
 
 // İlaç Etken Madde İşlemleri (Korumalı)
 Route::post('/ilaclar/{ilac}/etken-maddeler/ekle', [IlacEtkenMaddeController::class, 'addMultipleToMedicine']);
+
+
+// Reçete Route'ları
+Route::apiResource('receteler', ReceteController::class);
+Route::get('/receteler/hasta/{hastaId}', [ReceteController::class, 'getPatientPrescriptions']);
+Route::get('/receteler/qr/{receteNo}', [ReceteController::class, 'getPrescriptionByQR']);
+Route::post('/receteler/{receteId}/oneriler', [ReceteController::class, 'getPrescriptionRecommendations']);
+Route::get('/receteler/{receteId}/oneriler', [ReceteController::class, 'getPrescriptionSuggestions']);
+Route::post('/receteler/{receteId}/oneriler/{oneriId}/ekle', [ReceteController::class, 'addSuggestionToPrescription']);
+
+
 //});
 
 // Public Routes

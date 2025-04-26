@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/views/home_page.dart';
 import 'package:mobile/views/pages/barcode_scanner_page.dart';
 import 'package:mobile/views/pages/general_search_page.dart';
+import 'package:mobile/views/pages/prescription_qr_scan_page.dart';
 
 import '../constants/app_colors.dart';
 
@@ -27,7 +28,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   final pages = [
     const HomePage(),
     const GeneralSearchPage(),
-    const BarcodeScannerPage()
+    const PrescriptionScanPage()
   ];
 
   @override

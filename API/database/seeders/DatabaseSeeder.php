@@ -15,12 +15,13 @@ class DatabaseSeeder extends Seeder
     {
         // İşlemlerin sırası önemli, ilişkili veriler için sıralamaya dikkat et
         $this->call([
-            HastalikSeeder::class,        // Önce hastalıkları oluştur
-            HastaSeeder::class,           // Sonra hastaları oluştur
-            HastaTibbiGecmisSeeder::class,// Tıbbi geçmişleri ekle
-            HastaHastalikSeeder::class,   // Hasta-hastalık ilişkileri
-            HastaIlacKullanimSeeder::class, // İlaç kullanım geçmişi
-            LaboratuvarSonucuSeeder::class, // Laboratuvar sonuçları
+            //HastalikSeeder::class,        // Önce hastalıkları oluştur
+            //HastaSeeder::class,           // Sonra hastaları oluştur
+            //HastaTibbiGecmisSeeder::class,// Tıbbi geçmişleri ekle
+            //HastaHastalikSeeder::class,   // Hasta-hastalık ilişkileri
+            //HastaIlacKullanimSeeder::class, // İlaç kullanım geçmişi
+            //LaboratuvarSonucuSeeder::class, // Laboratuvar sonuçları
+            ReceteSeeder::class             // Reçete oluşturur
         ]);
     }
 }

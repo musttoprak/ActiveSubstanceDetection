@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\IlacImportController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,3 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::get('/ilac-import', [IlacImportController::class, 'showImportForm'])->name('ilac.import.form');
+Route::post('/ilac-import', [IlacImportController::class, 'import'])->name('ilac.import');

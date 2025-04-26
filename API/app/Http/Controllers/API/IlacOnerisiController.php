@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\IlacOnerisiJob;
 use App\Models\Hasta;
 use App\Models\Hastalik;
 use App\Models\HastaHastalik;
@@ -10,11 +11,25 @@ use App\Models\Ilac;
 use App\Models\IlacOnerisi;
 use App\Models\HastaIlacKullanim;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
 class IlacOnerisiController extends Controller
 {
+
+    public function ilacOner(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $hasta_id = $request->input('hasta_id');
+        $hastalik_id = $request->input('hastalik_id');
+        $etken_madde_ids = $request->input('etken_madde_ids');
+        $exclude_ilac_ids = $request->input('exclude_ilac_ids');
+
+        IlacOnerisiJob::dispatch($hasta_id,$hastalik_id,$etken_madde_ids,$exclude_ilac_ids);
+
+        return response()->json(["message" => "İstek kuyruğa alındı"]);
+    }
+
     /**
      * Display a listing of the resource.
      *
