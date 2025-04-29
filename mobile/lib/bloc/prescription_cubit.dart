@@ -13,14 +13,17 @@ class PrescriptionLoading extends PrescriptionState {}
 
 class PrescriptionLoaded extends PrescriptionState {
   final List<PrescriptionResponseModel> prescriptions;
+
   PrescriptionLoaded(this.prescriptions);
 }
 
 class PrescriptionDetailLoading extends PrescriptionState {}
 
 class PrescriptionDetailLoaded extends PrescriptionState {
+  final bool isAddMedicine;
   final PrescriptionResponseModel prescription;
-  PrescriptionDetailLoaded(this.prescription);
+
+  PrescriptionDetailLoaded(this.prescription, this.isAddMedicine);
 }
 
 class PrescriptionRecommendationsLoading extends PrescriptionState {}
@@ -28,16 +31,25 @@ class PrescriptionRecommendationsLoading extends PrescriptionState {}
 class PrescriptionRecommendationsLoaded extends PrescriptionState {
   final List<DrugRecommendationModel> recommendations;
   final PrescriptionResponseModel prescription;
+
   PrescriptionRecommendationsLoaded(this.recommendations, this.prescription);
 }
 
 class PrescriptionError extends PrescriptionState {
   final String message;
+
   PrescriptionError(this.message);
+}
+
+class PrescriptionDetailError extends PrescriptionError {
+  final String receteNo;
+
+  PrescriptionDetailError(super.message, this.receteNo);
 }
 
 class PrescriptionSuccess extends PrescriptionState {
   final String message;
+
   PrescriptionSuccess(this.message);
 }
 
@@ -92,7 +104,7 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
     emit(PrescriptionDetailLoading());
     try {
       final prescription = await PrescriptionService.getPrescriptionById(id);
-      emit(PrescriptionDetailLoaded(prescription));
+      emit(PrescriptionDetailLoaded(prescription, false));
     } catch (e) {
       emit(PrescriptionError("Failed to fetch prescription details: $e"));
     }
@@ -111,28 +123,30 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
   }
 
   // QR kod ile reçete getir
-  Future<void> getPrescriptionByQR(String receteNo) async {
-    emit(PrescriptionDetailLoading());
+  Future<void> getPrescriptionByQR(String receteNo,
+      {bool isAddMedicine = false, PrescriptionResponseModel? prescription}) async {
+    if (isAddMedicine) {
+      emit(PrescriptionDetailLoaded(prescription!, true));
+    } else {
+      emit(PrescriptionDetailLoading());
+    }
     try {
-      print(receteNo);
       final prescription =
       await PrescriptionService.getPrescriptionByQR(receteNo);
-      emit(PrescriptionDetailLoaded(prescription));
+      emit(PrescriptionDetailLoaded(prescription, false));
     } catch (e) {
       emit(PrescriptionError("Failed to fetch prescription by QR: $e"));
     }
   }
 
   // Reçete için ilaç önerisi al
-  Future<void> requestPrescriptionRecommendations(int receteId,PrescriptionResponseModel prescription) async {
-    //emit(PrescriptionRecommendationsLoading());
+  Future<void> requestPrescriptionRecommendations(int receteId,
+      PrescriptionResponseModel prescription) async {
     try {
       // İlaç önerisi isteği gönder
       await PrescriptionService.getPrescriptionRecommendations(receteId);
-      //emit(PrescriptionSuccess("İlaç önerisi isteği gönderildi"));
 
-      // İstek kuyruğa alındıktan sonra, ML modeli işlemi için biraz bekle
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(Duration(seconds: 2));
       print("kuyruğa bakıyoruz");
       // Önerileri çek
       await getPrescriptionSuggestions(receteId, prescription);
@@ -143,8 +157,8 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
   }
 
   // Reçeteye önerilen ilaçları getir
-  Future<void> getPrescriptionSuggestions(int receteId, PrescriptionResponseModel prescription) async {
-    //emit(PrescriptionRecommendationsLoading());
+  Future<void> getPrescriptionSuggestions(int receteId,
+      PrescriptionResponseModel prescription) async {
     try {
       print("loading");
       final recommendations =
@@ -157,8 +171,9 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
   }
 
   // Önerilen ilacı reçeteye ekle
-  Future<void> addSuggestionToPrescription(
+  Future<void> addSuggestionToPrescription(String receteNo,
       int receteId,
+      PrescriptionRecommendationsLoaded addState,
       int oneriId, {
         String? dozaj,
         String? kullanimTalimati,
@@ -172,11 +187,11 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
         kullanimTalimati: kullanimTalimati,
         miktar: miktar,
       );
-
+      print("eklenmiş olması lazım");
       // Reçete detaylarını yenile
-      getPrescriptionDetails(receteId);
-
-      emit(PrescriptionSuccess("Suggestion added to prescription successfully"));
+      getPrescriptionByQR(receteNo, isAddMedicine: true, prescription: addState.prescription);
+      print("veri çekildi");
+      //emit(PrescriptionSuccess("Suggestion added to prescription successfully"));
     } catch (e) {
       emit(PrescriptionError("Failed to add suggestion to prescription: $e"));
     }
@@ -202,7 +217,7 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
         ilaclar: ilaclar,
       );
 
-      emit(PrescriptionDetailLoaded(prescription));
+      emit(PrescriptionDetailLoaded(prescription, false));
     } catch (e) {
       emit(PrescriptionError("Failed to create prescription: $e"));
     }
@@ -234,7 +249,7 @@ class PrescriptionCubit extends Cubit<PrescriptionState> {
         ilaclar: ilaclar,
       );
 
-      emit(PrescriptionDetailLoaded(prescription));
+      emit(PrescriptionDetailLoaded(prescription, false));
     } catch (e) {
       emit(PrescriptionError("Failed to update prescription: $e"));
     }

@@ -1,5 +1,5 @@
 // models/response_models/drug_recommendation_model.dart
-import 'package:mobile/models/response_models/ilac_response_model.dart';
+import 'package:mobile/models/response_models/medicine_response_model.dart';
 
 class DrugRecommendationModel {
   final int oneriId;
@@ -12,7 +12,7 @@ class DrugRecommendationModel {
   final String? doktorGeribildirimi;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final IlacResponseModel? ilac;
+  final MedicineResponseModel? ilac;
 
   DrugRecommendationModel({
     required this.oneriId,
@@ -40,7 +40,7 @@ class DrugRecommendationModel {
       doktorGeribildirimi: json['doktor_geribildirimi'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      ilac: json['ilac'] != null ? IlacResponseModel.fromJson(json['ilac']) : null,
+      ilac: json['ilac'] != null ? MedicineResponseModel.fromJson(json['ilac']) : null,
     );
   }
 }

@@ -193,7 +193,7 @@ class ReceteController extends Controller
     // QR kod ile reçete getir
     public function getPrescriptionByQR($receteNo)
     {
-        $recete = Recete::with(['hasta', 'hastalik', 'ilaclar.ilac'])
+        $recete = Recete::with(['hasta', 'hastalik', 'ilaclar.ilac.etkenMaddeler'])
             ->where('recete_no', $receteNo)
             ->first();
 

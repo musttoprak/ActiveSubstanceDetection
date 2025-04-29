@@ -40,8 +40,8 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 //Route::middleware('auth:sanctum')->group(function () {
 
 // Hasta (Patient) Routes
-Route::apiResource('hastalar', HastaController::class);
 Route::get('/hastalar/search', [HastaController::class, 'search']);
+Route::apiResource('hastalar', HastaController::class);
 Route::get('/hastalar/{hasta}/tibbi-gecmis', [HastaController::class, 'tibbiGecmis']);
 Route::get('/hastalar/{hasta}/hastaliklar', [HastaController::class, 'hastaliklar']);
 Route::get('/hastalar/{hasta}/ilac-kullanim', [HastaController::class, 'ilacKullanim']);

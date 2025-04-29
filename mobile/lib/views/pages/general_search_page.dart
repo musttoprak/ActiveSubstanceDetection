@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../service/pages_service.dart';
 
 class GeneralSearchPage extends StatefulWidget {
-  const GeneralSearchPage({Key? key}) : super(key: key);
+  const GeneralSearchPage({super.key});
 
   @override
   _GeneralSearchPageState createState() => _GeneralSearchPageState();
@@ -31,6 +31,10 @@ class _GeneralSearchPageState extends State<GeneralSearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Genel Arama"),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/views/home_page.dart';
-import 'package:mobile/views/pages/barcode_scanner_page.dart';
 import 'package:mobile/views/pages/general_search_page.dart';
 import 'package:mobile/views/pages/prescription_qr_scan_page.dart';
 
-import '../constants/app_colors.dart';
-
-const Color inActiveIconColor = Color(0xFFFFFFFF);
+// Aktif ve pasif renkleri tema üzerinden tanımlamak daha ölçeklenebilir olur.
+const Color inActiveIconColor = Color(0xFFB2D3FF);
+const Color activeIconColor = Color(0xFFFFFFFF);
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -25,76 +24,57 @@ class _HomePageScreenState extends State<HomePageScreen> {
     });
   }
 
-  final pages = [
-    const HomePage(),
-    const GeneralSearchPage(),
-    const PrescriptionScanPage()
+  final List<Widget> pages = const [
+    HomePage(),
+    GeneralSearchPage(),
+    PrescriptionScanPage(),
   ];
+
+  BottomNavigationBarItem buildNavItem({
+    required String svgIcon,
+    required String label,
+    required int index,
+  }) {
+    final bool isActive = currentSelectedIndex == index;
+    return BottomNavigationBarItem(
+      icon: SvgPicture.string(
+        svgIcon,
+        colorFilter: ColorFilter.mode(
+          isActive ? activeIconColor : inActiveIconColor,
+          BlendMode.srcIn,
+        ),
+      ),
+      label: label,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[currentSelectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: updateCurrentIndex,
-        currentIndex: currentSelectedIndex,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.blueColor,
-        items: [
-          BottomNavigationBarItem(
-            icon: SvgPicture.string(
-              homeIcon,
-              colorFilter: const ColorFilter.mode(
-                inActiveIconColor,
-                BlendMode.srcIn,
-              ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(0, -2),
             ),
-            activeIcon: SvgPicture.string(
-              homeIcon,
-              colorFilter: const ColorFilter.mode(
-                AppColors.secondaryAccent,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.string(
-              searchIcon,
-              colorFilter: const ColorFilter.mode(
-                inActiveIconColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            activeIcon: SvgPicture.string(
-              searchIcon,
-              colorFilter: const ColorFilter.mode(
-                AppColors.secondaryAccent,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Arama",
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.string(
-              cameraIcon,
-              colorFilter: const ColorFilter.mode(
-                inActiveIconColor,
-                BlendMode.srcIn,
-              ),
-            ),
-            activeIcon: SvgPicture.string(
-              cameraIcon,
-              colorFilter: const ColorFilter.mode(
-                AppColors.secondaryAccent,
-                BlendMode.srcIn,
-              ),
-            ),
-            label: "Kamera",
-          ),
-        ],
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: currentSelectedIndex,
+          onTap: updateCurrentIndex,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          items: [
+            buildNavItem(svgIcon: homeIcon, label: "Home", index: 0),
+            buildNavItem(svgIcon: searchIcon, label: "Arama", index: 1),
+            buildNavItem(svgIcon: cameraIcon, label: "Kamera", index: 2),
+          ],
+        ),
       ),
     );
   }

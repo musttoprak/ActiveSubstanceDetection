@@ -1,6 +1,6 @@
 // models/response_models/prescription_response_model.dart
 import 'package:mobile/models/response_models/hastalik_response_model.dart';
-import 'package:mobile/models/response_models/ilac_response_model.dart';
+import 'package:mobile/models/response_models/medicine_response_model.dart';
 
 import 'hasta_response_model.dart';
 
@@ -39,14 +39,20 @@ class PrescriptionResponseModel {
 
   factory PrescriptionResponseModel.fromJson(Map<String, dynamic> json) {
     return PrescriptionResponseModel(
-      receteId: json['recete_id'],
-      hastaId: json['hasta_id'],
-      hastalikId: json['hastalik_id'],
+      receteId: json['recete_id'] is String
+          ? int.parse(json['recete_id'])
+          : json['recete_id'],
+      hastaId: json['hasta_id'] is String
+          ? int.parse(json['hasta_id'])
+          : json['hasta_id'],
+      hastalikId: json['hastalik_id'] is String
+          ? int.parse(json['hastalik_id'])
+          : json['hastalik_id'],
       receteNo: json['recete_no'],
       tarih: json['tarih'],
       notlar: json['notlar'],
       durum: json['durum'],
-      aktif: json['aktif'] == 1 ? true : false,
+      aktif: json['aktif'] == 1 || json['aktif'] == '1' || json['aktif'] == true,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       hasta: json['hasta'] != null ? HastaResponseModel.fromJson(json['hasta']) : null,
@@ -67,7 +73,7 @@ class PrescriptionMedicationModel {
   final String? dozaj;
   final String? kullanimTalimati;
   final int miktar;
-  final IlacResponseModel? ilac;
+  final MedicineResponseModel? ilac;
 
   PrescriptionMedicationModel({
     required this.receteIlacId,
@@ -81,13 +87,21 @@ class PrescriptionMedicationModel {
 
   factory PrescriptionMedicationModel.fromJson(Map<String, dynamic> json) {
     return PrescriptionMedicationModel(
-      receteIlacId: json['recete_ilac_id'],
-      receteId: json['recete_id'],
-      ilacId: json['ilac_id'],
+      receteIlacId: json['recete_ilac_id'] is String
+          ? int.parse(json['recete_ilac_id'])
+          : json['recete_ilac_id'],
+      receteId: json['recete_id'] is String
+          ? int.parse(json['recete_id'])
+          : json['recete_id'],
+      ilacId: json['ilac_id'] is String
+          ? int.parse(json['ilac_id'])
+          : json['ilac_id'],
       dozaj: json['dozaj'],
       kullanimTalimati: json['kullanim_talimati'],
-      miktar: json['miktar'] ?? 1,
-      ilac: json['ilac'] != null ? IlacResponseModel.fromJson(json['ilac']) : null,
+      miktar: json['miktar'] is String
+          ? int.parse(json['miktar'] ?? '1')
+          : json['miktar'] ?? 1,
+      ilac: json['ilac'] != null ? MedicineResponseModel.fromJson(json['ilac']) : null,
     );
   }
 }

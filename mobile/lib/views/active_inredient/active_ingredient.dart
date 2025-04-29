@@ -64,7 +64,10 @@ mixin ActiveIngredientMixin {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: backgroundColor,
-        title: const Text("Etkin Maddeler"),
+        title: const Text(
+          "Etkin Maddeler",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -104,7 +107,7 @@ mixin ActiveIngredientMixin {
 
     scrollController.addListener(() {
       if (scrollController.position.pixels >=
-          scrollController.position.maxScrollExtent - 200 &&
+              scrollController.position.maxScrollExtent - 200 &&
           !isLoadingMore &&
           !hasReachedEnd) {
         _loadMoreItems(context);
@@ -120,21 +123,17 @@ mixin ActiveIngredientMixin {
       hasReachedEnd = false;
       lastSearchQuery = query;
 
-      context.read<ActiveIngredientCubit>().searchActiveIngredient(
-          query,
-          page: currentPage,
-          isNewSearch: true
-      );
-    }else {
+      context
+          .read<ActiveIngredientCubit>()
+          .searchActiveIngredient(query, page: currentPage, isNewSearch: true);
+    } else {
       currentPage = 1;
       hasReachedEnd = false;
       lastSearchQuery = query;
 
-      context.read<ActiveIngredientCubit>().searchActiveIngredient(
-          null,
-          page: currentPage,
-          isNewSearch: true
-      );
+      context
+          .read<ActiveIngredientCubit>()
+          .searchActiveIngredient(null, page: currentPage, isNewSearch: true);
     }
   }
 
@@ -150,8 +149,7 @@ mixin ActiveIngredientMixin {
     context.read<ActiveIngredientCubit>().searchActiveIngredient(
         lastSearchQuery,
         page: currentPage,
-        isNewSearch: false
-    );
+        isNewSearch: false);
   }
 
   // Helper method to call setState within the mixin
@@ -185,7 +183,7 @@ mixin ActiveIngredientMixin {
         return NotFoundScreen(
           title: "No Results Found",
           description:
-          "We couldn't find any active ingredients matching your search. Try again with different keywords.",
+              "We couldn't find any active ingredients matching your search. Try again with different keywords.",
           btnText: "Try Again",
           press: () {
             searchFocusNode.requestFocus();
@@ -198,7 +196,7 @@ mixin ActiveIngredientMixin {
         return NotFoundScreen(
           title: "No Search History",
           description:
-          "You don't have any search history yet. Try searching for an active ingredient.",
+              "You don't have any search history yet. Try searching for an active ingredient.",
           btnText: "Search Now",
           press: () {
             searchFocusNode.requestFocus();
@@ -219,7 +217,8 @@ mixin ActiveIngredientMixin {
     return const Center(child: Text("Geçmiş Aramalarım"));
   }
 
-  Widget _buildResultList(List<EtkenMaddeResponseModel> results, bool isLoadingMore) {
+  Widget _buildResultList(
+      List<EtkenMaddeResponseModel> results, bool isLoadingMore) {
     return ListView.builder(
       controller: scrollController,
       itemCount: results.length + (isLoadingMore ? 1 : 0),
@@ -252,24 +251,23 @@ mixin ActiveIngredientMixin {
             height: 50,
             child: imageUrl.endsWith('.svg')
                 ? SvgPicture.network(
-              imageUrl,
-              placeholderBuilder: (context) =>
-              const CircularProgressIndicator(),
-              fit: BoxFit.cover,
-            )
+                    imageUrl,
+                    placeholderBuilder: (context) =>
+                        const CircularProgressIndicator(),
+                    fit: BoxFit.cover,
+                  )
                 : Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(Icons.broken_image,
-                    size: 50, color: Colors.grey);
-              },
-            ),
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.broken_image,
+                          size: 50, color: Colors.grey);
+                    },
+                  ),
           ),
           title: Text(ingredient.etkenMaddeAdi),
           subtitle: Text(
-            ingredient.genelBilgi != null &&
-                ingredient.genelBilgi!.length > 60
+            ingredient.genelBilgi != null && ingredient.genelBilgi!.length > 60
                 ? "${ingredient.genelBilgi!.substring(0, 60)}..."
                 : ingredient.genelBilgi ?? "...",
           ),

@@ -66,7 +66,6 @@ class MedicineResponseModel {
   });
 
   factory MedicineResponseModel.fromJson(Map<String, dynamic> json) {
-    print(json['etken_maddeler']);
     return MedicineResponseModel(
       ilacId: json['ilac_id'] is String ? int.parse(json['ilac_id']) : json['ilac_id'],
       ilacAdi: json['ilac_adi'],

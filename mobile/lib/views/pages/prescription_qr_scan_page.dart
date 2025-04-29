@@ -50,6 +50,7 @@ class _PrescriptionScanPageState extends State<PrescriptionScanPage> {
               ),
               child: Stack(
                 children: [
+                  Container(color: Colors.black),
                   MobileScanner(
                     controller: controller,
                     onDetect: (capture) {
@@ -94,7 +95,7 @@ class _PrescriptionScanPageState extends State<PrescriptionScanPage> {
                       height: 250,
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Colors.white,
+                          color:  Colors.white,
                           width: 2,
                         ),
                         borderRadius: BorderRadius.circular(12),

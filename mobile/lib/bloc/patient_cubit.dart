@@ -60,6 +60,7 @@ class PatientCubit extends Cubit<PatientState> {
       final patients = await PatientService.searchPatients(query);
       emit(PatientLoaded(patients));
     } catch (e) {
+      print(e);
       emit(PatientError("Failed to search patients: $e"));
     }
   }

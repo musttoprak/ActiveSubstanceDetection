@@ -57,11 +57,11 @@ class _ActiveIngredientDetailPageState
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("ETKİN MADDE BİLGİSİ"),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
+          title: const Text("Etkin Madde Bilgisi"),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          centerTitle: true,
+          elevation: 0,
         ),
         body: Column(
           children: [

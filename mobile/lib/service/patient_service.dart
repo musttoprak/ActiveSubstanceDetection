@@ -75,7 +75,6 @@ class PatientService {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${await getToken()}',
           },
         ),
       );
@@ -83,7 +82,7 @@ class PatientService {
       if (response.statusCode == 200) {
         if (response.data is Map<String, dynamic> &&
             response.data.containsKey('data')) {
-          final List data = response.data['data'];
+          final List data = response.data['data']['data']; // 👈 değişen yer
           return data
               .map((item) => PatientResponseModel.fromJson(item))
               .toList();
@@ -118,7 +117,6 @@ class PatientService {
       // Düzeltilmiş kod - Backend'den gelen yapıya uygun
       if (response.data is Map<String, dynamic> &&
           response.data.containsKey('data')) {
-
         final data = response.data['data']; // Sadece 'data' anahtarını al
 
         return PatientResponseModel.fromJson(data);

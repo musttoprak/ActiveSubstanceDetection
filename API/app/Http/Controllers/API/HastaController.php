@@ -103,9 +103,8 @@ class HastaController extends Controller
     {
         $hasta = Hasta::findOrFail($hastaId);
         $hasta->load('tibbiGecmis');
-        $hasta->load('hastaHastaliklar');
-        $hasta->load('hastaliklar');
-        $hasta->load('ilacKullanim');
+        $hasta->load('hastaHastaliklar.hastalik');
+        $hasta->load('ilacKullanim.ilac');
         $hasta->load('laboratuvarSonuclari');
         $hasta->load('ilacOnerileri');
 
