@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/views/active_inredient/active_ingredient.dart';
-import 'package:mobile/views/drug_detection.dart';
+import 'package:mobile/views/community_forum_page.dart';
+import 'package:mobile/views/medication_reminder.dart';
 import 'package:mobile/views/medicine/medicine_screen.dart';
+import 'package:mobile/views/pages/general_search_page.dart';
 import 'package:mobile/views/patient/patient_list_page.dart';
 import 'package:mobile/views/settings.dart';
-import '../constants/app_colors.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,7 +14,28 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentIndex = 0;
+  final List<String> _announcements = [
+    "Yeni ilaç etkileşim veritabanı yüklendi! Artık daha kapsamlı kontroller yapabilirsiniz.",
+    "Yeni güncelleme: Topluluk forumu eklendi! Meslektaşlarınla bilgi paylaşabilirsin.",
+    "E-reçete entegrasyonu güncellendi. Daha hızlı reçete erişimi için uygulamayı keşfedin."
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -22,177 +44,154 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            Stack(
-              children: [
-                // Background Image with Gradient Overlay
-                Container(
-                  height: MediaQuery.sizeOf(context).height * .4,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/background-2.jpg'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withOpacity(0.4),
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.2),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
+            // Geliştirilmiş Üst Bölüm
+            _buildHeader(context, colorScheme),
 
-                // Title & Subtitle
-                Positioned.fill(
-                  top: 60,
-                  bottom: 90,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "TEBEMT",
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 8,
-                                color: Colors.black45,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "FARMASÖTİK BAKIM ASİSTANI\nETKİN MADDE TESPİTİ",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 8,
-                                color: Colors.black45,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            // Duyuru alanı
+            _buildAnnouncementBanner(context, colorScheme),
 
-                // Search Box
-                Positioned(
-                  bottom: 20,
-                  right: 20,
-                  left: 20,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      style: TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                        hintText: "Müstahzar ara...",
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 18,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            // Ana Menü Seçimleri (Sekmeler)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: colorScheme.primary,
+                indicatorWeight: 5,
+                labelColor: colorScheme.primary,
+                unselectedLabelColor: Colors.grey,
+                dividerHeight: 0,
+                tabs: const [
+                  Tab(text: "Ana Modüller"),
+                  Tab(text: "Ek Özellikler"),
+                ],
+                onTap: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+              ),
             ),
 
-            // Kısayol Kartları
+            // Sekmelerin İçeriği
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                padding: const EdgeInsets.all(16),
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  _buildShortcutCard(
-                    context,
-                    ActiveIngredientScreen(backgroundColor: Theme.of(context).colorScheme.primary),
-                    "assets/medicine.png",
-                    "Etkin Madde",
-                    isNew: true,
-                    borderColor: Theme.of(context).colorScheme.primary,
+                  // Ana Modüller Sekmesi
+                  GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildShortcutCard(
+                        context,
+                        ActiveIngredientScreen(
+                            backgroundColor: colorScheme.primary),
+                        "assets/medicine.png",
+                        "Etkin Madde Tespit",
+                        description: "İlaçların etken maddelerini incele",
+                        isNew: true,
+                        borderColor: colorScheme.primary,
+                      ),
+                      _buildShortcutCard(
+                        context,
+                        MedicineScreen(backgroundColor: colorScheme.error),
+                        "assets/medicine-2.png",
+                        "İlaç Tespit",
+                        description: "İlaç bilgilerini sorgula",
+                        borderColor: colorScheme.error,
+                      ),
+                      _buildShortcutCard(
+                        context,
+                        PatientListPage(backgroundColor: Colors.green),
+                        "assets/patient.png",
+                        "Hasta Yönetimi",
+                        description: "Hasta bilgilerini yönet",
+                        borderColor: Colors.green,
+                      ),
+                      _buildShortcutCard(
+                        context,
+                        SettingsScreen(backgroundColor: Colors.orange),
+                        "assets/settings.png",
+                        "Ayarlar",
+                        description: "Uygulama ayarlarını düzenle",
+                        borderColor: Colors.orange,
+                      ),
+                    ],
                   ),
-                  _buildShortcutCard(
-                    context,
-                    MedicineScreen(backgroundColor: Theme.of(context).colorScheme.error),
-                    "assets/medicine-2.png",
-                    "İlaç Tespit",
-                    borderColor: Theme.of(context).colorScheme.error,
-                  ),
-                  _buildShortcutCard(
-                    context,
-                    PatientListPage(backgroundColor: Colors.green),
-                    "assets/communication.png",
-                    "Hastalar",
-                    borderColor: Colors.green,
-                  ),
-                  _buildShortcutCard(
-                    context,
-                    SettingsScreen(backgroundColor: Colors.orange),
-                    "assets/settings.png",
-                    "Ayarlar",
-                    borderColor: Colors.orange,
+
+                  // Ek Özellikler Sekmesi
+                  GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildShortcutCard(
+                        context,
+                        MedicationReminderPage(),
+                        "assets/reminder.png",
+                        "İlaç Hatırlatıcı",
+                        description: "Hasta ilaç hatırlatıcısı oluştur",
+                        isNew: true,
+                        borderColor: Colors.blue,
+                      ),
+                      _buildShortcutCard(
+                        context,
+                        CommunityForumPage(),
+                        "assets/communication.png",
+                        "Topluluk Forumu",
+                        description: "Meslektaşlarınla iletişim kur",
+                        isNew: true,
+                        borderColor: Colors.purple,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            // Created by Text
+            // Alt Bilgi
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                "@ 2024 Mustafa Toprak",
-                style: TextStyle(
-                  fontSize: 10,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.black,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "© 2024 Mustafa Toprak",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    "v1.2.0",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -201,11 +200,195 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Geliştirilmiş Üst Bölüm
+  Widget _buildHeader(BuildContext context, ColorScheme colorScheme) {
+    return Container(
+      height: MediaQuery.sizeOf(context).height * .24,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          // Arka plan görüntüsü ve degradesi
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/background-2.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.4),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+
+          // Başlık ve Alt başlık
+          Positioned(
+            top: 30,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                Text(
+                  "TEBEMT",
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.5),
+                        offset: Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "FARMASÖTİK BAKIM ASİSTANI",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.5),
+                        offset: Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    "ETKİN MADDE TESPİTİ",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Arama butonu
+          Positioned(
+            bottom: 15,
+            right: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: Icon(Icons.search, color: colorScheme.primary),
+                onPressed: () {
+                  // Genel arama sayfasına yönlendirme
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GeneralSearchPage(),
+                    ),
+                  );
+                },
+                tooltip: 'Genel Arama',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Duyuru Banner'ı
+  Widget _buildAnnouncementBanner(
+      BuildContext context, ColorScheme colorScheme) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.campaign_outlined,
+            color: colorScheme.primary,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Duyuru",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _announcements[_currentIndex % _announcements.length],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.arrow_forward_ios, size: 14),
+            color: colorScheme.primary,
+            onPressed: () {
+              setState(() {
+                _currentIndex++;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Geliştirilmiş Kısayol Kartı
   Widget _buildShortcutCard(
     BuildContext context,
     Widget page,
     String iconPath,
     String label, {
+    required String description,
     bool isNew = false,
     Color borderColor = Colors.grey,
   }) {
@@ -222,14 +405,14 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: Offset(0, 4),
             )
           ],
           border: Border.all(color: borderColor.withOpacity(0.2)),
         ),
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -278,10 +461,21 @@ class _HomePageState extends State<HomePage> {
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
+                color: Colors.black.withOpacity(0.8),
               ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

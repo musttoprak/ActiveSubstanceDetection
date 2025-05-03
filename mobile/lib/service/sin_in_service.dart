@@ -31,10 +31,32 @@ class SignInService {
         print("Response Data: $data");
         return LoginResponseModel.fromJson(data);
       } else {
-        throw Exception("Server error: ${response.statusMessage}");
+        return LoginResponseModel(
+            error: true,
+            message: "Sunucu hatası: ${response.statusMessage}"
+        );
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        String errorMessage = "Giriş bilgileriniz hatalı";
+        if (e.response?.data != null && e.response?.data['error'] != null) {
+          errorMessage = e.response?.data['error'];
+        }
+        return LoginResponseModel(
+            error: true,
+            message: errorMessage
+        );
+      }
+
+      return LoginResponseModel(
+          error: true,
+          message: "Giriş işlemi başarısız: ${e.message ?? 'Bilinmeyen hata'}"
+      );
     } catch (e) {
-      throw Exception("Failed to login: $e");
+      return LoginResponseModel(
+          error: true,
+          message: "Giriş işlemi başarısız: $e"
+      );
     }
   }
 }

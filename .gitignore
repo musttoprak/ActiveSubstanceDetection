@@ -30,6 +30,9 @@ yarn.lock
 #ML kısmı için
 ML/ilac_oneri_model.joblib
 ML/ilac_oneri_model.log
+ML/03_05/ilac_oneri_model.joblib
+ML/03_05/ilac_oneri_model.log
+ML/improved_drug_recommender.joblib
 
 # IDE veya editör ayar dosyaları
 .idea/

@@ -41,4 +41,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * User ilişkileri eklentisi
+     */
+    public function detail()
+    {
+        return $this->hasOne(UserDetail::class);
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(ForumPost::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ForumComment::class);
+    }
+
+    public function medicationReminders()
+    {
+        return $this->hasMany(MedicationReminder::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
+    }
 }

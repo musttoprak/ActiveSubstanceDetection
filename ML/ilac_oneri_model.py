@@ -20,6 +20,8 @@ from sklearn.model_selection import GridSearchCV
 from collections import defaultdict
 import seaborn as sns
 import matplotlib.pyplot as plt
+import random
+import time
 
 
 # Loglama ayarları
@@ -180,7 +182,6 @@ class IlacOneriModel:
             import traceback
             logger.error(traceback.format_exc())
             raise
-
 
     def prepare_data(self, data):
             """Veri hazırlama ve temizleme"""
@@ -792,6 +793,61 @@ class IlacOneriModel:
         
         print("=" * 60)
 
+    # Veri analizi fonksiyonları
+    def analyze_data_distribution(df, column, title):
+        """Bir sütunun değer dağılımını analiz eder ve görselleştirir"""
+        plt.figure(figsize=(10, 6))
+        value_counts = df[column].value_counts()
+        
+        if len(value_counts) > 20:
+            # Çok fazla benzersiz değer varsa, ilk 20'sini göster
+            value_counts = value_counts.head(20)
+            plt.title(f"{title} (İlk 20 değer)")
+        else:
+            plt.title(title)
+        
+        sns.barplot(x=value_counts.index, y=value_counts.values)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+        
+        # İstatistikler
+        print(f"Benzersiz değer sayısı: {df[column].nunique()}")
+        print(f"En yaygın 5 değer ve sayıları:\n{value_counts.head(5)}")
+        
+    def analyze_relationships(df1, df2, key, title):
+        """İki veri çerçevesi arasındaki ilişkileri analiz eder"""
+        merged = pd.merge(df1, df2, on=key, how='inner')
+        relationship_counts = merged.groupby(key).size().reset_index(name='count')
+        
+        plt.figure(figsize=(12, 6))
+        plt.title(title)
+        plt.hist(relationship_counts['count'], bins=30)
+        plt.xlabel('İlişki Sayısı')
+        plt.ylabel('Frekans')
+        plt.show()
+        
+        print(f"Ortalama ilişki sayısı: {relationship_counts['count'].mean():.2f}")
+        print(f"Maksimum ilişki sayısı: {relationship_counts['count'].max()}")
+        print(f"İlişki dağılımı:\n{relationship_counts['count'].describe()}")
+
+    # Eksik veriler için analiz
+    def analyze_missing_data(df, title):
+        """Veri çerçevesindeki eksik değerleri analiz eder"""
+        missing = df.isnull().sum()
+        missing_percent = 100 * missing / len(df)
+        missing_data = pd.concat([missing, missing_percent], axis=1)
+        missing_data.columns = ['Eksik Değer Sayısı', 'Eksik Değer Yüzdesi']
+        missing_data = missing_data[missing_data['Eksik Değer Sayısı'] > 0].sort_values('Eksik Değer Yüzdesi', ascending=False)
+        
+        plt.figure(figsize=(10, 6))
+        plt.title(f"{title} - Eksik Değer Analizi")
+        sns.barplot(x=missing_data.index, y=missing_data['Eksik Değer Yüzdesi'])
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+        
+        return missing_data
 
     def train_model(self, force_retrain=False):
         """Model eğitimi"""
@@ -1468,82 +1524,6 @@ class IlacOneriModel:
             bitis_zamani = time.time()
             logger.info(f"Tahmin başarısız oldu: {(bitis_zamani - baslangic_zamani):.2f} saniye")
             return {"error": str(e)}   
-        def adjust_predictions_by_active_substances(self, predictions, target_etken_madde_ids):
-            """
-            Etken madde uyumuna göre tahminleri düzenle
-            
-            Args:
-                predictions (list): [(ilac_id, olasılık), ...] şeklinde tahmin listesi
-                target_etken_madde_ids (list): Hedef etken madde ID'leri
-                
-            Returns:
-                list: Düzenlenmiş tahminler
-            """
-            logger.info(f"{len(predictions)} tahmin etken madde uyumuna göre ayarlanıyor")
-            
-            if not hasattr(self, 'ilac_etken_lookup'):
-                logger.warning("İlaç-etken madde eşleştirmesi (ilac_etken_lookup) bulunamadı")
-                return predictions
-            
-            # Etken madde ID'lerini set'e çevir
-            target_etken_set = set(target_etken_madde_ids)
-            
-            # İlaç-olasılık sözlüğü
-            ilac_olasilikar = {}
-            
-            # İlk geçiş: Her ilaç için en yüksek olasılık
-            for ilac_id, prob in predictions:
-                # Bu ilaç daha önce işlendi mi?
-                if ilac_id in ilac_olasilikar:
-                    # En yüksek olasılığı tut
-                    ilac_olasilikar[ilac_id] = max(prob, ilac_olasilikar[ilac_id])
-                else:
-                    ilac_olasilikar[ilac_id] = prob
-            
-            # İkinci geçiş: Etken madde uyumuna göre puanları ayarla
-            adjusted_predictions = []
-            
-            for ilac_id, prob in ilac_olasilikar.items():
-                # İlacın etken maddelerini al
-                ilac_etken_ids = self.ilac_etken_lookup.get(ilac_id, [])
-                
-                if not ilac_etken_ids:
-                    # Etken madde bilgisi yoksa olasılığı düşür
-                    adjusted_prob = prob * 0.5
-                    logger.debug(f"İlaç {ilac_id} için etken madde bilgisi bulunamadı, olasılık 0.5 ile ölçeklendi")
-                else:
-                    # Etken madde ID'lerini set'e çevir
-                    ilac_etken_set = set(ilac_etken_ids)
-                    
-                    # Etken madde eşleşmesi hesapla
-                    ortak_etken = ilac_etken_set.intersection(target_etken_set)
-                    
-                    # Uyum puanı (1.0: tam eşleşme, 0.5: kısmi eşleşme, 0.3: eşleşme yok)
-                    if len(ortak_etken) == len(target_etken_set) and len(ilac_etken_set) == len(target_etken_set):
-                        # Tam eşleşme: Hedeflenen etken maddelerin tamamı ilaçta var ve ilaçta başka etken madde yok
-                        uyum_puani = 1.0
-                        logger.debug(f"İlaç {ilac_id} için tam etken madde eşleşmesi: {ortak_etken}")
-                    elif len(ortak_etken) > 0:
-                        # Kısmi eşleşme: Hedeflenen etken maddelerden bir kısmı ilaçta var
-                        uyum_orani = len(ortak_etken) / len(target_etken_set)
-                        uyum_puani = 0.5 + (uyum_orani * 0.5)  # 0.5 - 1.0 arası değer
-                        logger.debug(f"İlaç {ilac_id} için kısmi etken madde eşleşmesi: {ortak_etken}, uyum oranı: {uyum_orani:.2f}")
-                    else:
-                        # Eşleşme yok
-                        uyum_puani = 0.3
-                        logger.debug(f"İlaç {ilac_id} için etken madde eşleşmesi yok")
-                    
-                    # Olasılığı uyum puanı ile ayarla
-                    adjusted_prob = prob * uyum_puani
-                
-                # Düzeltilmiş olasılıkla ekle
-                adjusted_predictions.append((ilac_id, adjusted_prob))
-            
-            # Olasılık sırasına göre sırala
-            adjusted_predictions.sort(key=lambda x: x[1], reverse=True)
-            
-            logger.info(f"Etken madde uyumuna göre {len(adjusted_predictions)} tahmin ayarlandı")
-            return adjusted_predictions
 
     def adjust_predictions_by_active_substances(self, predictions, target_etken_madde_ids):
         """
@@ -1556,8 +1536,7 @@ class IlacOneriModel:
         Returns:
             list: Düzenlenmiş tahminler
         """
-        import logging
-        logger = logging.getLogger('IlacOneriModel')
+        
         logger.info(f"{len(predictions)} tahmin etken madde uyumuna göre ayarlanıyor")
         
         if not hasattr(self, 'ilac_etken_lookup'):
@@ -1669,9 +1648,6 @@ class IlacOneriModel:
             # İlaç adını bul
             ilac_adi = self.ilac_lookup.get(ilac_id, f"İlaç_{ilac_id}")
             
-            # % olarak olasılık formatla
-            prob_percentage = prob * 100
-            
             # Etken maddeleri al
             etken_maddeler = []
             
@@ -1699,7 +1675,7 @@ class IlacOneriModel:
                 "ilac_id": ilac_id,
                 "ilac_adi": ilac_adi,
                 "olaslik": prob,
-                "oneri_puani": round(prob_percentage, 2),
+                "oneri_puani": round(prob * 100, 2),
                 "etken_maddeler": etken_maddeler
             })
             
@@ -1711,8 +1687,534 @@ class IlacOneriModel:
             "recommendations": recommendations
         }
 
+class HybridDrugRecommender:
+    """
+    Hibrit İlaç Öneri Sistemi
+    
+    Üç farklı öneri yaklaşımını birleştirir:
+    1. Etken madde tabanlı öneri (İçerik tabanlı)
+    2. Hastalık-ilaç ilişkisi tabanlı öneri (Bilgi tabanlı)
+    3. Hasta-ilaç kullanımları (İşbirlikçi filtreleme)
+    """
+    
+    def __init__(self):
+        self.etken_madde_model = None
+        self.hastalik_ilac_model = None
+        self.hasta_model = None
+        self.ilac_lookup = {}
+        self.etken_madde_lookup = {}
+        self.ilac_etken_vectors = {}
+        self.hastalik_ilac_scores = {}
+        self.encoder = None
+        self.scaler = None
+        self.model_version = "2.0"
+        self.feature_importances = None
+        
+    def fit(self, prepared_data):
+        """
+        Tüm modelleri eğit
+        
+        Args:
+            prepared_data: Hazırlanmış veri yapıları
+        """
+        # Referanslar ve lookup tablolarını oluştur
+        self.ilac_lookup = dict(zip(
+            prepared_data['ilaclar']['ilac_id'], 
+            prepared_data['ilaclar']['ilac_adi']
+        ))
+        
+        self.etken_madde_lookup = dict(zip(
+            prepared_data['etken_maddeler']['etken_madde_id'], 
+            prepared_data['etken_maddeler']['etken_madde_adi']
+        ))
+        
+        # 1. Etken Madde Tabanlı Model
+        self._train_active_substance_model(prepared_data)
+        
+        # 2. Hastalık-İlaç İlişki Modeli
+        self._train_disease_drug_model(prepared_data)
+        
+        # 3. Hasta Özellikleri Modeli
+        self._train_patient_features_model(prepared_data)
+        
+        print("Hibrit model eğitimi tamamlandı.")
+        return self
+    
+    def _train_active_substance_model(self, prepared_data):
+        """
+        Etken madde tabanlı modeli eğit (İçerik tabanlı filtreleme)
+        """
+        from sklearn.metrics.pairwise import cosine_similarity
+        
+        # İlaç-etken madde matrisini al
+        ilac_etken_df = prepared_data['ilac_etken_matrix']
+        
+        # Her ilacın etken maddelerini sözlük olarak sakla
+        for _, row in ilac_etken_df.iterrows():
+            ilac_id = row['ilac_id']
+            etken_madde_list = row.get('etken_madde_id', [])
+            if etken_madde_list and isinstance(etken_madde_list, list):
+                self.ilac_etken_vectors[ilac_id] = etken_madde_list
+        
+        print(f"Etken madde vektörleri oluşturuldu: {len(self.ilac_etken_vectors)} ilaç")
+        
+    def _train_disease_drug_model(self, prepared_data):
+        """
+        Hastalık-ilaç ilişki modelini eğit (Bilgi tabanlı filtreleme)
+        """
+        # Hastalık-ilaç matrisini al
+        hastalik_ilac_df = prepared_data['hastalik_ilac_matrix']
+        
+        # Hastalık-ilaç skorlarını sözlük olarak sakla
+        for _, row in hastalik_ilac_df.iterrows():
+            hastalik_id = row['hastalik_id']
+            ilac_id = row['ilac_id']
+            score = row.get('normalized_count', 0)
+            
+            if hastalik_id not in self.hastalik_ilac_scores:
+                self.hastalik_ilac_scores[hastalik_id] = {}
+            
+            self.hastalik_ilac_scores[hastalik_id][ilac_id] = score
+        
+        print(f"Hastalık-ilaç skorları oluşturuldu: {len(self.hastalik_ilac_scores)} hastalık")
+        
+    def _train_patient_features_model(self, prepared_data):
+        """
+        Hasta özellikleri tabanlı modeli eğit (Özellik tabanlı)
+        """
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.preprocessing import StandardScaler, OneHotEncoder
+        from sklearn.compose import ColumnTransformer
+        from sklearn.pipeline import Pipeline
+        
+        # Veri hazırlama
+        hastalar_df = prepared_data['hastalar']
+        ilac_kullanim_df = pd.DataFrame(prepared_data.get('hasta_ilac_kullanim', []))
+        
+        # Veri yoksa erken çık
+        if hastalar_df.empty or ilac_kullanim_df.empty:
+            print("Hasta-ilaç kullanım verisi bulunamadı, hasta özellikleri modeli eğitilemiyor.")
+            return
+        
+        # Hasta-ilaç kullanımlarını birleştir
+        hasta_features = pd.merge(
+            ilac_kullanim_df,
+            hastalar_df,
+            on='hasta_id'
+        )
+        
+        # Özellik sütunlarını seç
+        categorical_features = ['cinsiyet']
+        numerical_features = ['yas', 'vki']
+        
+        # Eksik özellik sütunlarını kontrol et
+        available_cat_features = [f for f in categorical_features if f in hasta_features.columns]
+        available_num_features = [f for f in numerical_features if f in hasta_features.columns]
+        
+        # Veri dönüştürücüleri
+        transformers = []
+        
+        if available_cat_features:
+            cat_transformer = OneHotEncoder(handle_unknown='ignore')
+            transformers.append(('cat', cat_transformer, available_cat_features))
+        
+        if available_num_features:
+            num_transformer = StandardScaler()
+            transformers.append(('num', num_transformer, available_num_features))
+        
+        # Hiç özellik yoksa erken çık
+        if not transformers:
+            print("Yeterli hasta özelliği bulunamadı, hasta özellikleri modeli eğitilemiyor.")
+            return
+        
+        # Özellik dönüştürücüsü
+        preprocessor = ColumnTransformer(
+            transformers=transformers,
+            remainder='drop'
+        )
+        
+        # Model pipeline'ı
+        model = Pipeline([
+            ('preprocessor', preprocessor),
+            ('classifier', RandomForestClassifier(
+                n_estimators=100,
+                max_depth=10,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42,
+                class_weight='balanced'
+            ))
+        ])
+        
+        # Veriyi eğitim için hazırla
+        X = hasta_features.drop(['ilac_id'], axis=1)
+        y = hasta_features['ilac_id']
+        
+        # Modeli eğit
+        model.fit(X, y)
+        
+        # Modeli sakla
+        self.hasta_model = model
+        self.encoder = preprocessor
+        
+        # Özellik önemlerini sakla (eğer varsa)
+        if hasattr(model.named_steps['classifier'], 'feature_importances_'):
+            self.feature_importances = model.named_steps['classifier'].feature_importances_
+        
+        print("Hasta özellikleri modeli eğitildi.")
+    
+    def predict(self, hasta_id, hastalik_id=None, etken_madde_ids=None, exclude_ilac_ids=None, hasta_demografik=None):
+        """
+        Hibrit ilaç önerisi yap
+        
+        Args:
+            hasta_id: Hasta ID'si
+            hastalik_id: Hastalık ID'si (opsiyonel)
+            etken_madde_ids: Etken madde ID'leri (opsiyonel)
+            exclude_ilac_ids: Hariç tutulacak ilaçlar (opsiyonel)
+            hasta_demografik: Hasta demografik bilgileri (opsiyonel)
+            
+        Returns:
+            recommendations: Önerilen ilaçlar listesi
+        """
+        # Parametreleri kontrol et
+        if not hastalik_id and not etken_madde_ids:
+            return {"error": "Hastalık ID veya etken madde ID'leri gerekli"}
+        
+        # İstek zamanına göre stratejileri değiştir
+        # Örneğin, saatin saniyelerine göre ağırlıkları değiştir
+        seconds = int(time.time()) % 60
+        strategy = seconds % 3  # 0, 1 veya 2
+        
+        # Ağırlıkları strateji numarasına göre ayarla
+        if strategy == 0:
+            # Etken madde öncelikli
+            etken_madde_weight = 1.2
+            hastalik_weight = 0.8
+            patient_weight = 0.6
+        elif strategy == 1:
+            # Hastalık öncelikli
+            etken_madde_weight = 0.8
+            hastalik_weight = 1.2
+            patient_weight = 0.6
+        else:
+            # Hasta özellikleri öncelikli
+            etken_madde_weight = 0.8
+            hastalik_weight = 0.6
+            patient_weight = 1.2
+
+        # Her modelden önerileri al
+        recommendations = {}
+        scores = {}
+        
+        # 1. Etken madde tabanlı öneriler
+        if etken_madde_ids:
+            etken_madde_recommendations = self._get_active_substance_recommendations(etken_madde_ids)
+            for ilac_id, score in etken_madde_recommendations.items():
+                if ilac_id not in scores:
+                    scores[ilac_id] = []
+                scores[ilac_id].append(score * etken_madde_weight)  # Değişken ağırlık
+        
+        # 2. Hastalık-ilaç ilişkisi tabanlı öneriler
+        if hastalik_id:
+            hastalik_recommendations = self._get_disease_drug_recommendations(hastalik_id)
+            for ilac_id, score in hastalik_recommendations.items():
+                if ilac_id not in scores:
+                    scores[ilac_id] = []
+                scores[ilac_id].append(score * hastalik_weight)  # Hastalık-ilaç ağırlığı 0.8
+        
+        # 3. Hasta özellikleri tabanlı öneriler
+        if hasta_demografik and self.hasta_model:
+            patient_recommendations = self._get_patient_features_recommendations(hasta_demografik, hastalik_id)
+            for ilac_id, score in patient_recommendations.items():
+                if ilac_id not in scores:
+                    scores[ilac_id] = []
+                scores[ilac_id].append(score * patient_weight)  # Hasta özellikleri ağırlığı 0.6
+        
+        # Hariç tutulan ilaçları filtrele
+        if exclude_ilac_ids:
+            for ilac_id in exclude_ilac_ids:
+                if ilac_id in scores:
+                    del scores[ilac_id]
+        
+        # Skorları hesapla (ortalama)
+        final_scores = {}
+        for ilac_id, score_list in scores.items():
+            if score_list:
+                # Ortalama skorun %10'u kadar rastgele bir değişim ekle
+                base_score = sum(score_list) / len(score_list)
+                variation = base_score * 0.1  # %10 değişim
+                random_factor = random.uniform(-variation, variation)
+                final_scores[ilac_id] = base_score + random_factor
+        
+        # Skorları sırala
+        sorted_scores = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # En iyi 5 ilaç önerisini hazırla
+        recommendations = []
+        for ilac_id, score in sorted_scores[:5]:
+            ilac_adi = self.ilac_lookup.get(ilac_id, f"İlaç_{ilac_id}")
+            
+            # Etken maddeleri al
+            etken_maddeler = []
+            for etken_id in self.ilac_etken_vectors.get(ilac_id, []):
+                etken_maddeler.append({
+                    "etken_madde_id": etken_id,
+                    "etken_madde_adi": self.etken_madde_lookup.get(etken_id, f"Etken madde {etken_id}")
+                })
+            
+            # Öneri ekle
+            recommendations.append({
+                "ilac_id": ilac_id,
+                "ilac_adi": ilac_adi,
+                "olaslik": score,
+                "oneri_puani": round(score * 100, 2),
+                "etken_maddeler": etken_maddeler
+            })
+        
+        return {"recommendations": recommendations}
+    
+    def _get_active_substance_recommendations(self, etken_madde_ids):
+        """
+        Etken madde tabanlı öneriler
+        
+        Args:
+            etken_madde_ids: Hedef etken madde ID'leri
+            
+        Returns:
+            recommendations: İlaç ID'leri ve skorları sözlüğü
+        """
+        # Hedef etken maddeleri set'e çevir
+        target_set = set(etken_madde_ids)
+        
+        # Her ilaç için benzerlik skoru hesapla
+        scores = {}
+        for ilac_id, etken_madde_list in self.ilac_etken_vectors.items():
+            ilac_set = set(etken_madde_list)
+            
+            # Jaccard benzerliği hesapla
+            intersection = len(target_set.intersection(ilac_set))
+            union = len(target_set.union(ilac_set))
+            
+            if union > 0:
+                similarity = intersection / union
+            else:
+                similarity = 0
+            
+            scores[ilac_id] = similarity
+        
+        return scores
+    
+    def _get_disease_drug_recommendations(self, hastalik_id):
+        """
+        Hastalık-ilaç ilişkisi tabanlı öneriler
+        
+        Args:
+            hastalik_id: Hastalık ID'si
+            
+        Returns:
+            recommendations: İlaç ID'leri ve skorları sözlüğü
+        """
+        # Hastalık için ilaç skorlarını al
+        if hastalik_id in self.hastalik_ilac_scores:
+            return self.hastalik_ilac_scores[hastalik_id]
+        else:
+            return {}  # Bu hastalık için kayıtlı ilişki yok
+    
+    def _get_patient_features_recommendations(self, hasta_demografik, hastalik_id=None):
+        """
+        Hasta özellikleri tabanlı öneriler
+        
+        Args:
+            hasta_demografik: Hasta demografik bilgileri
+            hastalik_id: Hastalık ID'si (opsiyonel)
+            
+        Returns:
+            recommendations: İlaç ID'leri ve skorları sözlüğü
+        """
+        # Hasta modelimiz yoksa boş sözlük döndür
+        if not self.hasta_model:
+            return {}
+        
+        # Test verisi oluştur
+        test_data = {
+            'hasta_id': [hasta_demografik.get('hasta_id', 0)],
+            'hastalik_id': [hastalik_id] if hastalik_id else [0],
+            'yas': [hasta_demografik.get('yas', 0)],
+            'cinsiyet': [hasta_demografik.get('cinsiyet', 'bilinmiyor')],
+            'vki': [hasta_demografik.get('vki', 0)]
+        }
+        
+        # Test verisi DataFrame'i oluştur
+        test_df = pd.DataFrame(test_data)
+        
+        try:
+            # Olasılık tahminlerini al
+            proba = self.hasta_model.predict_proba(test_df)
+            classes = self.hasta_model.classes_
+            
+            # İlaç ID'leri ve olasılıkları eşleştir
+            recommendations = {}
+            for idx, ilac_id in enumerate(classes):
+                recommendations[ilac_id] = proba[0][idx]
+            
+            return recommendations
+        except:
+            # Tahmin yapılamazsa boş sözlük döndür
+            return {}
+    
+    def save_model(self, path='improved_drug_recommender.joblib'):
+        """
+        Modeli kaydet
+        
+        Args:
+            path: Kayıt yolu
+        """
+        import joblib
+        
+        model_data = {
+            'ilac_lookup': self.ilac_lookup,
+            'etken_madde_lookup': self.etken_madde_lookup,
+            'ilac_etken_vectors': self.ilac_etken_vectors,
+            'hastalik_ilac_scores': self.hastalik_ilac_scores,
+            'hasta_model': self.hasta_model,
+            'encoder': self.encoder,
+            'scaler': self.scaler,
+            'model_version': self.model_version,
+            'feature_importances': self.feature_importances
+        }
+        
+        joblib.dump(model_data, path)
+        print(f"Model kaydedildi: {path}")
+        
+    def load_model(self, path='improved_drug_recommender.joblib'):
+        """
+        Modeli yükle
+        
+        Args:
+            path: Yükleme yolu
+        """
+        import joblib
+        import os
+        
+        if not os.path.exists(path):
+            print(f"Model dosyası bulunamadı: {path}")
+            return False
+        
+        try:
+            model_data = joblib.load(path)
+            
+            self.ilac_lookup = model_data.get('ilac_lookup', {})
+            self.etken_madde_lookup = model_data.get('etken_madde_lookup', {})
+            self.ilac_etken_vectors = model_data.get('ilac_etken_vectors', {})
+            self.hastalik_ilac_scores = model_data.get('hastalik_ilac_scores', {})
+            self.hasta_model = model_data.get('hasta_model')
+            self.encoder = model_data.get('encoder')
+            self.scaler = model_data.get('scaler')
+            self.model_version = model_data.get('model_version', '2.0')
+            self.feature_importances = model_data.get('feature_importances')
+            
+            print(f"Model yüklendi: {path} (Versiyon: {self.model_version})")
+            return True
+        except Exception as e:
+            print(f"Model yükleme hatası: {str(e)}")
+            return False
+
+
+
+
+
+def improved_data_preparation(data):
+        """
+        İyileştirilmiş veri hazırlama süreci
+        
+        Args:
+            data: API'den çekilen ham veri
+            
+        Returns:
+            prepared_data: Hazırlanmış veri yapıları
+        """
+        # DataFrame'leri oluştur
+        ilaclar_df = pd.DataFrame(data["ilaclar"])
+        etken_maddeler_df = pd.DataFrame(data["etken_maddeler"])
+        ilac_etken_df = pd.DataFrame(data["ilac_etken_maddeler"])
+        hastaliklar_df = pd.DataFrame(data["hastaliklar"])
+        hastalar_df = pd.DataFrame(data["hastalar"])
+        hasta_hastalik_df = pd.DataFrame(data["hasta_hastaliklar"])
+        ilac_kullanim_df = pd.DataFrame(data["hasta_ilac_kullanim"])
+        
+        # Sütun adlarını standardize et
+        column_mappings = {
+            'adi': 'ilac_adi',
+            'hastalik_adi': 'hastalik_adi',
+            'etken_madde_adi': 'etken_madde_adi',
+            'kategori': 'hastalik_kategorisi'
+        }
+        
+        for df in [ilaclar_df, etken_maddeler_df, hastaliklar_df]:
+            for old_col, new_col in column_mappings.items():
+                if old_col in df.columns and new_col not in df.columns:
+                    df[new_col] = df[old_col]
+        
+        # Eksik değerleri akıllıca doldur
+        # Sayısal değişkenler için medyan
+        for col in ['yas', 'boy', 'kilo', 'vki']:
+            if col in hastalar_df.columns:
+                hastalar_df[col] = hastalar_df[col].fillna(hastalar_df[col].median())
+        
+        # Kategorik değişkenler için yaygın kategoriler
+        for col in ['cinsiyet', 'hastalik_kategorisi']:
+            if col in hastalar_df.columns:
+                hastalar_df[col] = hastalar_df[col].fillna(hastalar_df[col].mode()[0])
+            elif col in hastaliklar_df.columns:
+                hastaliklar_df[col] = hastaliklar_df[col].fillna(hastaliklar_df[col].mode()[0])
+        
+        # İlaç-etken madde matrisi oluştur (one-hot encoding yerine)
+        ilac_etken_matrix = pd.pivot_table(
+            ilac_etken_df, 
+            values='etken_madde_id', 
+            index='ilac_id',
+            aggfunc=lambda x: list(x)
+        ).reset_index()
+        
+        # İlaç-hastalık ilişkisi matrisi
+        # Önce hasta-hastalık ve hasta-ilaç verilerini birleştir
+        hasta_hastalik_ilac = pd.merge(
+            hasta_hastalik_df,
+            ilac_kullanim_df,
+            on='hasta_id'
+        )
+        
+        # Şimdi hastalık-ilaç ilişkisi matrisi oluştur
+        hastalik_ilac_matrix = hasta_hastalik_ilac.groupby(['hastalik_id', 'ilac_id']).size().reset_index(name='count')
+        hastalik_ilac_normalized = hastalik_ilac_matrix.copy()
+        
+        # Her hastalık için ilaç kullanım sayılarını normalize et (0-1 arası)
+        for hastalik_id in hastalik_ilac_matrix['hastalik_id'].unique():
+            mask = hastalik_ilac_matrix['hastalik_id'] == hastalik_id
+            max_count = hastalik_ilac_matrix.loc[mask, 'count'].max()
+            if max_count > 0:  # Sıfıra bölme hatasını önle
+                hastalik_ilac_normalized.loc[mask, 'normalized_count'] = hastalik_ilac_matrix.loc[mask, 'count'] / max_count
+            else:
+                hastalik_ilac_normalized.loc[mask, 'normalized_count'] = 0
+        
+        # Hazırlanmış verileri döndür
+        prepared_data = {
+            'ilaclar': ilaclar_df,
+            'etken_maddeler': etken_maddeler_df,
+            'ilac_etken_matrix': ilac_etken_matrix,
+            'hastaliklar': hastaliklar_df,
+            'hastalar': hastalar_df,
+            'hastalik_ilac_matrix': hastalik_ilac_normalized
+        }
+        
+        return prepared_data
+
+
 # Global model instance
 ilac_oneri_model = IlacOneriModel()
+
+drug_recommender = HybridDrugRecommender()
 
 @app.route("/")
 def index():
@@ -1740,33 +2242,30 @@ def train_model():
         force_retrain = request.json.get("force_retrain", False) if request.is_json else False
         logger.info(f"Model eğitimi isteği alındı. force_retrain={force_retrain}")
         
-        # Eğitim başlamadan önce mevcut model durumunu kontrol et
-        model_existed = ilac_oneri_model.model is not None
+        # Eğitim öncesi durum kontrolü
+        model_existed = hasattr(drug_recommender, 'ilac_lookup') and bool(drug_recommender.ilac_lookup)
+        
+        # Verileri çek
+        data = ilac_oneri_model.fetch_data()
+        
+        # Verileri hazırla
+        prepared_data = improved_data_preparation(data)
         
         # Modeli eğit
-        accuracy, precision, recall, f1 = ilac_oneri_model.train_model(force_retrain=force_retrain)
+        drug_recommender.fit(prepared_data)
+        
+        # Modeli kaydet
+        drug_recommender.save_model()
         
         # Eğitim sonucunu hazırla
-        if accuracy is None:
-            return jsonify({
-                "status": "error",
-                "message": "Model eğitimi başarısız oldu"
-            }), 500
-        
         return jsonify({
             "status": "success",
             "message": "Model başarıyla eğitildi" if not model_existed else "Model başarıyla güncellendi",
-            "metrics": {
-                "accuracy": float(accuracy) if accuracy is not None else None,
-                "precision": float(precision) if precision is not None else None,
-                "recall": float(recall) if recall is not None else None,
-                "f1": float(f1) if f1 is not None else None
-            },
             "model_info": {
-                "version": ilac_oneri_model.model_version,
-                "trained_at": ilac_oneri_model.model_last_trained.isoformat() if ilac_oneri_model.model_last_trained else None,
-                "ilac_count": len(ilac_oneri_model.ilac_lookup),
-                "etken_madde_count": len(ilac_oneri_model.etken_madde_lookup)
+                "version": drug_recommender.model_version,
+                "ilac_count": len(drug_recommender.ilac_lookup),
+                "etken_madde_count": len(drug_recommender.etken_madde_lookup),
+                "hastalik_count": len(drug_recommender.hastalik_ilac_scores)
             }
         })
     except Exception as e:
@@ -1791,10 +2290,7 @@ def predict():
     hastalik_id = data.get("hastalik_id")
     etken_madde_ids = data.get("etken_madde_ids")
     exclude_ilac_ids = data.get("exclude_ilac_ids")
-
     hasta_demografik = data.get('hasta_demografik', {})
-    hastalik_bilgileri = data.get('hastalik_bilgileri', {})
-    etken_madde_bilgileri = data.get('etken_madde_bilgileri', [])
     
     # Log isteği
     logger.info(f"Tahmin isteği: hasta_id={hasta_id}, hastalik_id={hastalik_id}, "
@@ -1808,73 +2304,55 @@ def predict():
         return jsonify({"error": "Hastalık ID veya Etken Madde ID'leri gerekli"}), 400
     
     # Model varlığını kontrol et
-    if ilac_oneri_model.model is None:
-        logger.warning("Tahmin isteği geldi ama model eğitilmemiş")
-        return jsonify({"error": "Model henüz eğitilmemiş. Lütfen önce /train endpoint'ini kullanın."}), 400
+    if not hasattr(drug_recommender, 'ilac_lookup') or not drug_recommender.ilac_lookup:
+        # Modeli yüklemeyi dene
+        if os.path.exists('improved_drug_recommender.joblib'):
+            logger.info("Model yükleniyor...")
+            drug_recommender.load_model()
+        else:
+            logger.warning("Tahmin isteği geldi ama model eğitilmemiş")
+            return jsonify({"error": "Model henüz eğitilmemiş. Lütfen önce /train endpoint'ini kullanın."}), 400
     
     # Tahmin yap
-    result = ilac_oneri_model.predict_ilac(
+    result = drug_recommender.predict(
         hasta_id=hasta_id, 
         hastalik_id=hastalik_id, 
         etken_madde_ids=etken_madde_ids,
         exclude_ilac_ids=exclude_ilac_ids,
-        hasta_demografik=hasta_demografik,
-        hastalik_bilgileri=hastalik_bilgileri
+        hasta_demografik=hasta_demografik
     )
     
     # Hata kontrolü
     if "error" in result:
         return jsonify(result), 400
     
-    def convert_numpy_types(obj):
-           import numpy as np
-           if isinstance(obj, (np.integer, np.int64, np.int32)):
-               return int(obj)
-           elif isinstance(obj, (np.floating, np.float64, np.float32)):
-               return float(obj)
-           elif isinstance(obj, np.ndarray):
-               return obj.tolist()
-           elif isinstance(obj, dict):
-               return {k: convert_numpy_types(v) for k, v in obj.items()}
-           elif isinstance(obj, list):
-               return [convert_numpy_types(i) for i in obj]
-           else:
-               return obj
-        
-    # Sonucu dönüştür
-    serializable_result = convert_numpy_types(result)
+    # İşlem süresini hesapla
+    end_time = datetime.datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    logger.info(f"Tahmin tamamlandı: {len(result.get('recommendations', []))} öneri, {duration:.2f} saniye")
     
-    return jsonify(serializable_result)
+    return jsonify(result)
 
 @app.route("/model-info", methods=["GET"])
 def model_info():
     """Model bilgilerini gösteren endpoint"""
-    if ilac_oneri_model.model is None:
+    if not hasattr(drug_recommender, 'ilac_lookup') or not drug_recommender.ilac_lookup:
         return jsonify({
             "status": "not_trained",
             "message": "Model henüz eğitilmemiş"
         })
     
-    # Model metriklerini al
-    metrics = ilac_oneri_model.model_metrics or {}
-    
     # İstatistikleri hazırla
     model_stats = {
         "status": "trained",
-        "version": ilac_oneri_model.model_version,
-        "last_trained": ilac_oneri_model.model_last_trained.isoformat() if ilac_oneri_model.model_last_trained else None,
-        "total_ilaclar": len(ilac_oneri_model.ilac_lookup),
-        "total_etken_maddeler": len(ilac_oneri_model.etken_madde_lookup),
-        "metrics": {
-            "accuracy": metrics.get('accuracy'),
-            "precision": metrics.get('precision'),
-            "recall": metrics.get('recall'),
-            "f1": metrics.get('f1'),
-            "samples_count": metrics.get('samples_count')
-        }
+        "version": drug_recommender.model_version,
+        "total_ilaclar": len(drug_recommender.ilac_lookup),
+        "total_etken_maddeler": len(drug_recommender.etken_madde_lookup),
+        "total_hastaliklar": len(drug_recommender.hastalik_ilac_scores)
     }
     
     return jsonify(model_stats)
+
 
 @app.route("/ilac-info/<int:ilac_id>", methods=["GET"])
 def ilac_info(ilac_id):
@@ -1949,35 +2427,28 @@ def server_error(e):
         "message": "Sunucu hatası, lütfen log dosyalarını kontrol edin"
     }), 500
 
+# Uygulama başlangıç kodları
 if __name__ == "__main__":
     # Uygulama başlangıç bilgisi
-    logger.info("İlaç Öneri Sistemi başlatılıyor...")
+    logger.info("Geliştirilmiş İlaç Öneri Sistemi başlatılıyor...")
     logger.info(f"API URL: {API_BASE_URL}")
-    logger.info(f"Model dosya yolu: {ilac_oneri_model.model_path}")
     
-    # Uygulama başlatıldığında modeli yükle veya eğit
-    if os.path.exists(ilac_oneri_model.model_path):
+    # Uygulama başlatıldığında modeli yükle
+    if os.path.exists('improved_drug_recommender.joblib'):
         logger.info("Mevcut model dosyası bulundu, yükleniyor...")
-        if ilac_oneri_model.load_model():
+        if drug_recommender.load_model():
             logger.info("Model başarıyla yüklendi")
         else:
             logger.error("Model yüklenemedi")
     else:
         logger.info("Model dosyası bulunamadı, eğitim gerekli")
-        try:
-            logger.info("Otomatik model eğitimi başlatılıyor...")
-            ilac_oneri_model.train_model()
-            logger.info("Model eğitimi tamamlandı")
-        except Exception as e:
-            logger.error(f"Başlangıç model eğitimi sırasında hata: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
     
     # Uygulama bilgilerini logla
-    logger.info(f"Model durumu: {'Eğitilmiş' if ilac_oneri_model.model is not None else 'Eğitilmemiş'}")
-    logger.info(f"İlaç sayısı: {len(ilac_oneri_model.ilac_lookup)}")
-    logger.info(f"Etken madde sayısı: {len(ilac_oneri_model.etken_madde_lookup)}")
-    logger.info("Flask uygulaması başlatılıyor...")
+    logger.info(f"Model durumu: {'Eğitilmiş' if hasattr(drug_recommender, 'ilac_lookup') and drug_recommender.ilac_lookup else 'Eğitilmemiş'}")
+    if hasattr(drug_recommender, 'ilac_lookup'):
+        logger.info(f"İlaç sayısı: {len(drug_recommender.ilac_lookup)}")
+    if hasattr(drug_recommender, 'etken_madde_lookup'):
+        logger.info(f"Etken madde sayısı: {len(drug_recommender.etken_madde_lookup)}")
     
     # Uygulamayı başlat
     app.run(host="0.0.0.0", port=5000, debug=True)

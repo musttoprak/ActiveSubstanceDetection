@@ -10,6 +10,7 @@ use App\Models\IlacOnerisi;
 use App\Models\Recete;
 use App\Models\ReceteIlac;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -217,26 +218,25 @@ class ReceteController extends Controller
      */
     public function getPrescriptionRecommendations($receteId)
     {
-        $recete = Recete::with(['ilaclar.ilac.etkenMaddeler'])->findOrFail($receteId);
+        try {
+            $recete = Recete::with(['ilaclar.ilac.etkenMaddeler'])->findOrFail($receteId);
 
-        // Reçetedeki ilaçların etken maddelerini topla
-        $etkenMaddeIds = [];
-        foreach ($recete->ilaclar as $receteIlac) {
-            if ($receteIlac->ilac && $receteIlac->ilac->etkenMaddeler) {
-                foreach ($receteIlac->ilac->etkenMaddeler as $etkenMadde) {
-                    $etkenMaddeIds[] = $etkenMadde->etken_madde_id;
+            // Reçetedeki ilaçların etken maddelerini topla
+            $etkenMaddeIds = [];
+            foreach ($recete->ilaclar as $receteIlac) {
+                if ($receteIlac->ilac && $receteIlac->ilac->etkenMaddeler) {
+                    foreach ($receteIlac->ilac->etkenMaddeler as $etkenMadde) {
+                        $etkenMaddeIds[] = $etkenMadde->etken_madde_id;
+                    }
                 }
             }
-        }
 
-        // Benzersiz etken madde ID'lerini al
-        $uniqueEtkenMaddeIds = array_unique($etkenMaddeIds);
+            // Benzersiz etken madde ID'lerini al
+            $uniqueEtkenMaddeIds = array_unique($etkenMaddeIds);
 
-        // Reçetedeki ilaçların ID'lerini hariç tutma listesine ekle
-        $excludeIlacIds = $recete->ilaclar->pluck('ilac_id')->toArray();
+            // Reçetedeki ilaçların ID'lerini hariç tutma listesine ekle
+            $excludeIlacIds = $recete->ilaclar->pluck('ilac_id')->toArray();
 
-        // IlacOnerisiController'a istek gönder
-        try {
             // İlaç önerisi isteği için veriyi hazırla
             $requestData = [
                 'hasta_id' => $recete->hasta_id,
@@ -245,20 +245,40 @@ class ReceteController extends Controller
                 'exclude_ilac_ids' => $excludeIlacIds
             ];
 
-            // İlaç önerisi isteğini oluştur
-            IlacOnerisiJob::dispatch(
+            // Debug log ekle
+            Log::info("İlaç önerisi isteniyor", $requestData);
+
+            // İlaç önerisi isteğini oluştur ve hemen işle (sync)
+            $job = new IlacOnerisiJob(
                 $recete->hasta_id,
                 $recete->hastalik_id,
                 $uniqueEtkenMaddeIds,
                 $excludeIlacIds
             );
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'İlaç önerileri talebi kuyruğa alındı',
-                'request_data' => $requestData // Debug için
-            ]);
+            // İşi hemen çalıştır
+            $result = $job->handle();
+
+            // Debug log ekle
+            Log::info("İlaç önerisi sonucu", ['result' => $result]);
+
+            if (isset($result['success']) && $result['success']) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'İlaç önerileri başarıyla oluşturuldu',
+                    'data' => $result
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $result['message'] ?? 'İlaç önerisi işlemi başarısız',
+                    'data' => $result
+                ], 500);
+            }
         } catch (\Exception $e) {
+            Log::error("İlaç önerisi isteği sırasında hata: " . $e->getMessage());
+            Log::error("Hata izleme: " . $e->getTraceAsString());
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'İlaç önerisi talebi sırasında hata: ' . $e->getMessage()
@@ -274,7 +294,8 @@ class ReceteController extends Controller
         $oneriler = IlacOnerisi::with(['ilac'])
             ->where('hasta_id', $recete->hasta_id)
             ->where('hastalik_id', $recete->hastalik_id)
-            ->orderBy('oneri_puani', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
             ->get();
 
         return response()->json([

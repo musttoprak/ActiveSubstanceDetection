@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\ForumController;
 use App\Http\Controllers\API\HastaController;
 use App\Http\Controllers\API\HastaTibbiGecmisController;
 use App\Http\Controllers\API\HastalikController;
@@ -11,8 +12,10 @@ use App\Http\Controllers\API\IlacEtkenMaddeController;
 use App\Http\Controllers\API\HastaIlacKullanimController;
 use App\Http\Controllers\API\LaboratuvarSonucuController;
 use App\Http\Controllers\API\IlacOnerisiController;
+use App\Http\Controllers\API\MedicationReminderController;
 use App\Http\Controllers\API\ReceteController;
 use App\Http\Controllers\API\SearchController;
+use App\Http\Controllers\API\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +38,41 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+// User profile
+Route::get('/profile', [UserController::class, 'getProfile']);
+Route::post('/profile', [UserController::class, 'updateProfile']);
+
+// Forum routes
+Route::prefix('forum')->group(function () {
+    // Posts
+    Route::get('/posts', [ForumController::class, 'getPosts']);
+    Route::get('/posts/{id}', [ForumController::class, 'getPost']);
+    Route::post('/posts', [ForumController::class, 'createPost']);
+    Route::put('/posts/{id}', [ForumController::class, 'updatePost']);
+    Route::delete('/posts/{id}', [ForumController::class, 'deletePost']);
+
+    // Comments
+    Route::post('/posts/{postId}/comments', [ForumController::class, 'addComment']);
+    Route::put('/comments/{commentId}', [ForumController::class, 'updateComment']);
+    Route::delete('/comments/{commentId}', [ForumController::class, 'deleteComment']);
+    Route::post('/comments/{commentId}/accept', [ForumController::class, 'acceptComment']);
+
+    // Likes
+    Route::post('/like', [ForumController::class, 'like']);
+});
+
+// Medication reminders
+Route::prefix('reminders')->group(function () {
+    Route::get('/', [MedicationReminderController::class, 'getReminders']);
+    Route::get('/{id}', [MedicationReminderController::class, 'getReminder']);
+    Route::post('/', [MedicationReminderController::class, 'createReminder']);
+    Route::put('/{id}', [MedicationReminderController::class, 'updateReminder']);
+    Route::patch('/{id}/toggle-complete', [MedicationReminderController::class, 'toggleComplete']);
+    Route::delete('/{id}', [MedicationReminderController::class, 'deleteReminder']);
+    Route::get('/date/{date}', [MedicationReminderController::class, 'getRemindersByDate']);
+    Route::get('/month/{year}/{month}', [MedicationReminderController::class, 'getMonthEvents']);
+});
 
 // Protected Routes
 //Route::middleware('auth:sanctum')->group(function () {
@@ -126,4 +164,4 @@ Route::get('/ilac-etken-maddeler/etken-madde/{etkenMadde}/ilaclar', [IlacEtkenMa
 Route::get('/ilac-etken-maddeler/ilac/{ilac}/etken-maddeler', [IlacEtkenMaddeController::class, 'getActiveSubstancesByMedicine']);
 
 Route::get('/general/search', [SearchController::class, 'search']);
-Route::get('/general/{barcode}', [SearchController::class, 'getMedicineByBarcode']);
+Route::get('/general/{receteNo}', [SearchController::class, 'getMedicineByBarcode']);

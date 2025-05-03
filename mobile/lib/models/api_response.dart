@@ -1,28 +1,26 @@
+// lib/models/api_response.dart
 class ApiResponse<T> {
-  final bool error;
-  final String message;
+  final String status;
   final T? data;
+  final Map<String, dynamic>? rawData; // Ham veriyi saklamak için eklendi
+  final String message;
+  final bool success;
 
   ApiResponse({
-    required this.error,
-    required this.message,
+    required this.status,
     this.data,
+    this.rawData,
+    required this.message,
+    required this.success,
   });
 
-  factory ApiResponse.fromJson(
-      Map<String, dynamic> json, T Function(Map<String, dynamic>) create) {
+  factory ApiResponse.fromJson(Map<String, dynamic> json, T? Function(dynamic)? fromJsonT) {
     return ApiResponse(
-      error: json['error'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'] != null ? create(json['data']) : null,
+      status: json['status'] ?? 'error',
+      data: json['data'] != null && fromJsonT != null ? fromJsonT(json['data']) : null,
+      rawData: json, // Tüm ham veriyi sakla
+      message: json['message'] ?? 'Bilinmeyen bir hata oluştu',
+      success: json['status'] == 'success',
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'error': error,
-      'message': message,
-      'data': data,
-    };
   }
 }
